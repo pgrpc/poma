@@ -70,7 +70,12 @@ make clean poma-build POMA_PKG=sample
 
 ## TODO
 
+* [ ] переехать в pomasql/poma
 * [ ] creatif
+* [ ] доработать log()
+* [ ] в deps проверять psql
+* [ ] поддержка make v3.81
+* [ ] psql в docker
 * [ ] если awk ничего не моменял - вызвать исходник из sql/
 
 ## License
