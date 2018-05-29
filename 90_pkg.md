@@ -1,5 +1,5 @@
-#  sql/poma/90_pkg
-## sql/poma/90_pkg
+#  poma/90_pkg
+## poma/90_pkg
 
 ```sql
 /*

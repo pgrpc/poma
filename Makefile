@@ -351,38 +351,38 @@ FIRST = $(strip $(foreach a,$(INITIALS),$(if $(patsubst $a%,,$(notdir $1)),,$a))
 $(BUILD_DIR)/$(PKG)/%.psql: $(SQL_ROOT)/$(PKG)/%.sql
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	fc=$(call FIRST,$<);  \
-	  in=$< ; inn=$${in%.sql}; o=$@ ; outn=$${o%.psql} ; out=$$outn.sql ; \
+	  in=$< ; innr=$${in%.sql}; inn=$${innr#$(SQL_ROOT)/} o=$@ ; outn=$${o%.psql} ; out=$$outn.sql ; \
 	  # echo " -- $$outn ($$fc) --"; \
 	  case $$fc in \
-    	1|3|5|6) \
-     		$(AWK) '{ print gensub(/(\$$_\$$)($$| +#?)/, "\\1\\2 /* " FILENAME ":" FNR " */ ","g")};' \
-       		$< > $$out || echo "-- dd" >> $out ; \
-				echo "\i $$out" > $@ ;; \
-		 	2|8) \
-      	if [[ "$$inn" != "$${inn%_once}" ]] ; then \
-      		echo "\qecho $$inn" > $$out ; \
-	        arg=$$("$(MD5SUM)" $$in | sed -E "s/ +/','/") ; \
-	  			echo "select poma.patch('$(PKG)','$$arg','$(SQL_ROOT)/$(PKG)/','$(SQL_EMPTY)')" >> $$out ; \
-	  			echo "\gset" >> $$out ; \
-	  			echo "\i :patch" >> $$out ; \
-  				echo "\i $$out" > $@ ; \
-      	else \
-					echo "\i $<" > $@ ; \
-				fi ;; \
-    	9) \
-	  		# test file \
-	  		echo -n "+1" >> $(COUNT_FILE) ; \
-	  		echo "\\set TEST $$inn" > $$out ; \
-	  		echo "\\set TESTOUT $$outn.md" >> $$out ; \
-	  		echo "$$POMA_TEST_BEGIN" >> $$out ; \
-	  		$(AWK) '{ gsub(/ *-- *BOT/, "\n\\qecho '\''#  t/'\'':TEST\nSELECT :'\''TEST'\''\n\\set QUIET on\n\\pset t on\n\\g :OUTT\n\\pset t off\n\\set QUIET on"); gsub(/; *-- *EOT/, "\n\\w :OUTW\n\\g :OUTG"); print }' $< >> $$out ; \
-	  		echo "\! diff $$inn.md $$outn.md | tr \"\t\" ' ' > $(BUILD_DIR)/errors.diff" >> $$out ; \
-	  		echo "$$POMA_TEST_END" >> $$out ; \
-				echo "\i $$out" > $@ ;; \
-    	*) \
-				echo "\i $<" > $@ ;; \
+		1|3|5|6) \
+		    $(AWK) '{ print gensub(/(\$$_\$$)($$| +#?)/, "\\1\\2 /* " FILENAME ":" FNR " */ ","g")};' \
+		    $< > $$out || echo "-- dd" >> $out ; \
+		    echo "\i $$out" > $@ ;; \
+		2|8) \
+		    if [[ "$$inn" != "$${inn%_once}" ]] ; then \
+			echo "\qecho $$inn" > $$out ; \
+			arg=$$("$(MD5SUM)" $$in | sed -E "s/ +/','/") ; \
+			echo "select poma.patch('$(PKG)','$$arg','$(SQL_ROOT)/$(PKG)/','$(SQL_EMPTY)')" >> $$out ; \
+			echo "\gset" >> $$out ; \
+			echo "\i :patch" >> $$out ; \
+			echo "\i $$out" > $@ ; \
+		    else \
+			echo "\i $<" > $@ ; \
+		    fi ;; \
+		9) \
+		    # test file \
+		    echo -n "+1" >> $(COUNT_FILE) ; \
+		    echo "\\set TEST $$inn" > $$out ; \
+		    echo "\\set TESTOUT $$outn.md" >> $$out ; \
+		    echo "$$POMA_TEST_BEGIN" >> $$out ; \
+		    $(AWK) '{ gsub(/ *-- *BOT/, "\n\\qecho '\''#  t/'\'':TEST\nSELECT :'\''TEST'\''\n\\set QUIET on\n\\pset t on\n\\g :OUTT\n\\pset t off\n\\set QUIET on"); gsub(/; *-- *EOT/, "\n\\w :OUTW\n\\g :OUTG"); print }' $< >> $$out ; \
+		    echo "\! diff $$innr.md $$outn.md | tr \"\t\" ' ' > $(BUILD_DIR)/errors.diff" >> $$out ; \
+		    echo "$$POMA_TEST_END" >> $$out ; \
+		    echo "\i $$out" > $@ ;; \
+		*) \
+		    echo "\i $<" > $@ ;; \
 		esac ; \
-  	echo -n "."
+	echo -n "."
 
 BUILD_DIR ?= .build
 

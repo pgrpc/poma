@@ -65,7 +65,14 @@
 ```
 make clean poma-build POMA_PKG=
 make clean poma-build POMA_PKG=sample
+
 ```
+Для разработчика poma могут быть полезны команды из каталога poma:
+```
+make poma-clean .build/create.psql POMA_PKG=poma SQL_ROOT=.. MASK=[1-9]?_*.sql
+make poma-clean .build/drop.psql POMA_PKG=poma SQL_ROOT=.. MASK="00_*.sql 02_*.sql"
+```
+
 
 ## TODO
 
