@@ -11,5 +11,4 @@ SELECT * FROM poma.pkg_require('test')
 |pkg_require 
 |------------
 |
-(1 строка)
 
