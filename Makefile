@@ -398,18 +398,7 @@ clean-%:
 define POMA_TEST_BEGIN
 -- ----------------------------------------------------------------------------
 -- test_begin
-
 \set QUIET on
--- ----------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION pg_temp.raise_on_errors(errors TEXT)
-  RETURNS void LANGUAGE plpgsql AS
-$$_$$
-BEGIN
-  IF errors <> '' THEN
-    RAISE EXCEPTION E'\n%', errors;
-  END IF;
-END
-$$_$$;
 -- ----------------------------------------------------------------------------
 
 \set OUTW '| echo ''```sql'' >> ':TESTOUT' ; cat >> ':TESTOUT' ; echo '';\n```'' >> ':TESTOUT
@@ -440,7 +429,7 @@ define POMA_TEST_END
 ROLLBACK TO SAVEPOINT package_test;
 \set ERRORS `cat $(BUILD_DIR)/errors.diff`
 \pset t on
-SELECT pg_temp.raise_on_errors(:'ERRORS');
+SELECT poma.raise_on_errors(:'ERRORS');
 \pset t off
 \set QUIET off
 

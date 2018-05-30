@@ -82,7 +82,7 @@ make poma-clean .build/drop.psql POMA_PKG=poma SQL_ROOT=.. MASK="00_*.sql 02_*.s
 * [ ] поддержка make v3.81
 * [ ] сделать тест работы make
 * [ ] psql в docker
-* [ ] если awk ничего не моменял - вызвать исходник из sql/
+* [ ] если awk ничего не поменял - вызвать исходник из sql/
 
 ## License
 
