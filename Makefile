@@ -154,9 +154,8 @@ $(BUILD_DIR)/%.psql: $(BUILD_DIR) $(SQL_EMPTY) poma-deps
 	@cp $@ $@.back
 	@test_op=$$(cat $$COUNT_FILE) ; total=$$(($$test_op)) ; \
 	  $(POMA_LOG_PARSER) ; \
-	  psql --no-psqlrc --single-transaction -P footer=off -v ON_ERROR_STOP=1 -f $@
-
-#	   3>&1 1>$$LOGFILE 2>&3 | log $$total
+	  psql --no-psqlrc --single-transaction -v VERBOSITY=terse \
+	   -P footer=off -v ON_ERROR_STOP=1 -f $@ 3>&1 1>$$LOGFILE 2>&3 | log $$total
 
 $(BUILD_DIR):
 	@[ -d $@ ] || mkdir -p $@
@@ -276,6 +275,7 @@ config:
 
 # colors: https://linux.101hacks.com/ps1-examples/prompt-color-using-tput/
 define POMA_LOG_PARSER
+TEST_CNT=0; \
 function log() { \
   local test_total=$$1 ; \
   local filenew ; \
@@ -295,17 +295,23 @@ function log() { \
       TEST_CNT=$$(($$TEST_CNT+1)) ; \
       [[ "$$filenew" ]] && out="$$TEST_CNT - $${filenew%.macro}.sql" ; \
       fileold=$$filenew ; \
-      tput setaf 9 2>/dev/null ;  \
+      tput sgr0 2>/dev/null ;  \
      fi ; \
      [[ "$$d" ]] && echo "#$$d" ; \
-    elif [[ "$$data" == "$$dn" ]] ; then \
-     tput setaf 1 2>/dev/null ;  \
-     [[ "$$ret" != "0" ]] || echo "not ok $$out" ; \
-     echo "$$data" >> $${LOGFILE}.err ; \
-     echo "$$data" ; \
-     ret="1" ; \
-    fi \
+    else \
+	   if [[ "$$data" == "$$dn" ]] ; then \
+        tput setaf 1 2>/dev/null ;  \
+        [[ "$$ret" != "0" ]] || echo "not ok $$out" ; \
+        echo "$$data" >> $${LOGFILE}.err ; \
+        echo "$$data" ; \
+        ret="1" ; \
+	   fi; \
+    fi; \
   done ; \
+  if [[ $$ret == "0" ]] ; then \
+   tput setaf 2 2>/dev/null ; \
+   echo "ok $$out" ; \
+  fi; \
   tput sgr0 2>/dev/null ; \
   return $$ret ; \
 }
