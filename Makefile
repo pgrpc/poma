@@ -24,6 +24,7 @@ PGDATABASE   ?= $(PRG)
 PGUSER       ?= $(PRG)
 PGAPPNAME    ?= $(PRG)
 PGHOST       ?= localhost
+PGPORT       ?= 5432
 PGSSLMODE    ?= disable
 PGPASSWORD   ?= $(shell < /dev/urandom tr -dc A-Za-z0-9 | head -c14; echo)
 
@@ -233,6 +234,8 @@ define POMA_CONFIG_DEFAULT
 
 # Host
 PGHOST=$(PGHOST)
+# Port
+PGPORT=$(PGPORT)
 # Name
 PGDATABASE=$(PGDATABASE)
 # User
