@@ -78,10 +78,10 @@ SELECT poma.patch('poma_test','a83084dc0332dbc4d1f7a6c7dc7b4993','sql/poma_test/
 |sql/poma_test/20_xxtest_once.sql
 
 ```sql
-SELECT pkg, file, csum FROM poma.pkg_script_protected WHERE pkg = 'poma_test' AND file = '20_xxtest_once.sql'
+SELECT poma.patch('poma_test','a83084dc0332dbc4d1f7a6c7dc7b4993','sql/poma_test/20_xxtest_once.sql','sql/poma_test/','.build/empty_test.sql')
 ;
 ```
-|   pkg    |        file        |               csum               
-|----------|--------------------|----------------------------------
-|poma_test | 20_xxtest_once.sql | a83084dc0332dbc4d1f7a6c7dc7b4993
+|        patch         
+|----------------------
+|.build/empty_test.sql
 
