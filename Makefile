@@ -429,7 +429,7 @@ define POMA_TEST_END
 ROLLBACK TO SAVEPOINT package_test;
 \set ERRORS `cat $(BUILD_DIR)/errors.diff`
 \pset t on
-SELECT pg_temp.raise_on_errors(:'ERRORS');
+SELECT poma.raise_on_errors(:'ERRORS');
 \pset t off
 \set QUIET off
 

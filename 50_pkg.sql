@@ -334,7 +334,7 @@ END;
 $_$; -- VOLATILE
 COMMENT ON FUNCTION patch(TEXT,TEXT,TEXT,TEXT,TEXT) IS 'Регистрация скриптов обновления БД';
 /* ------------------------------------------------------------------------- */
-CREATE OR REPLACE FUNCTION pg_temp.raise_on_errors(errors TEXT) RETURNS void LANGUAGE 'plpgsql' AS
+CREATE OR REPLACE FUNCTION raise_on_errors(errors TEXT) RETURNS void LANGUAGE 'plpgsql' AS
 $_$
 BEGIN
   IF errors <> '' THEN
