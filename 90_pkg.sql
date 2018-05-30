@@ -52,3 +52,13 @@ SELECT poma.test('patch'); -- BOT
 SELECT poma.patch('poma_test','a83084dc0332dbc4d1f7a6c7dc7b4993','sql/poma_test/20_xxtest_once.sql','sql/poma_test/','.build/empty_test.sql'); -- EOT
 SELECT poma.patch('poma_test','a83084dc0332dbc4d1f7a6c7dc7b4993','sql/poma_test/20_xxtest_once.sql','sql/poma_test/','.build/empty_test.sql'); -- EOT
 /* ------------------------------------------------------------------------- */
+
+/* ------------------------------------------------------------------------- */
+SELECT poma.test('raise_on_errors'); -- BOT
+/*
+  Тест raise_on_errors
+*/
+SELECT poma.raise_on_errors(''); -- EOT
+--TODO: после подключения pgm/utils можно отработать тест с исключением,- utils.exception_test
+/* ------------------------------------------------------------------------- */
+

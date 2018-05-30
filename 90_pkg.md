@@ -85,3 +85,16 @@ SELECT poma.patch('poma_test','a83084dc0332dbc4d1f7a6c7dc7b4993','sql/poma_test/
 |----------------------
 |.build/empty_test.sql
 
+## poma/90_pkg
+
+```sql
+/*
+  Тест raise_on_errors
+*/
+SELECT poma.raise_on_errors('')
+;
+```
+|raise_on_errors 
+|----------------
+|
+
