@@ -12,3 +12,16 @@ SELECT * FROM poma.pkg_require('test')
 |------------
 |
 
+## poma/90_pkg
+
+```sql
+/*
+  Тест array_remove
+*/
+SELECT * FROM poma.array_remove(ARRAY['poma-sample', 'poma', 'mega_scheme'], 'mega_scheme')
+;
+```
+|   array_remove    
+|-------------------
+|{poma-sample,poma}
+
