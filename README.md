@@ -1,15 +1,19 @@
 # poma
 **Po**stgresql projects **Ma**kefile
 
-Проект предназначен для облегчения загрузки в БД (и удаления) SQL-кода (включая DDL и DML).
+[poma](https://github.com/pomasql/poma) предназначен для облегчения загрузки в БД postgresql SQL-кода (DDL и DML)
+ в проектах, где такой код разделяется на несколько файлов и каталогов. Далее такие каталоги называются "пакеты".
 
+Если SQL-код размещен в пакетах под общим корнем `sql/`, то [poma](https://github.com/pomasql/poma) - один из пакетов в общем списке.
 
 ## Project tree
+
+Структура проектов, использующих [poma](https://github.com/pomasql/poma), имеет вид:
 
 ```
 poma-sample
 ├── .env - конфигурация проекта, создается `make config`
-├── Makefile - Makefile проекта, имеет строку `include sql/poma/Makefile`
+├── Makefile - основной Makefile проекта, имеет строку `include sql/poma/Makefile`
 └── sql
     ├── poma - клон проекта poma (без изменений)
     │   ├── 00_cleanup.sql
@@ -22,13 +26,25 @@ poma-sample
 
 ## Usage
 
-* `make config` - создать файл настроек (.env)
-* `make create[-default]` - первичное создание пакета
-* `make build[-default]` - сборка хранимого кода
-* `make test[-default]` - запуск тестов
-* `make recreate[-default]` - пересоздание пакетов со сборкой кода
-* `make drop[-default]` - удаление пакета
-* `make erase[-default]` - удаление пакета и его персистентных данных
+Т.к. порядок загрузки пакетов имеет значение и из одного комплекта пакетов могут загружаться в БД разные наборы,
+ списки пакетов именуются и размещаются в основном Makefile проекта. Пример для списка с именем `all`:
+
+```
+%-all: POMA_PKG=poma sample
+```
+В результате, для работы с этим списком пакетов, к целям ниже (кроме `config`) добавятся аналогичные с суффиксом `-all`.
+ Если суффикс не указан, по умолчанию используется `%-default`. Пример - см. Makefile проекта
+ [poma-sample](https://github.com/pomasql/poma-sample).
+
+В результате `include sql/poma/Makefile`, основной Makefile проекта будет поддерживать следующие цели:
+
+* `make config` - создать файл настроек (.env) всего проекта
+* `make poma-create[-default]` - первичное создание пакета
+* `make poma-build[-default]` - сборка хранимого кода
+* `make poma-test[-default]` - запуск тестов
+* `make poma-recreate[-default]` - пересоздание пакетов со сборкой кода
+* `make poma-drop[-default]` - удаление пакета
+* `make poma-erase[-default]` - удаление пакета и его персистентных данных
 
 ## SQL filename
 
