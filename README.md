@@ -1,6 +1,25 @@
 # poma
 **Po**stgresql projects **Ma**kefile
 
+Проект предназначен для облегчения загрузки в БД (и удаления) SQL-кода (включая DDL и DML).
+
+
+## Project tree
+
+```
+poma-sample
+├── .env - конфигурация проекта, создается `make config`
+├── Makefile - Makefile проекта, имеет строку `include sql/poma/Makefile`
+└── sql
+    ├── poma - клон проекта poma (без изменений)
+    │   ├── 00_cleanup.sql
+    │   ├── ...
+    │   ├── Makefile - Makefile с рецептами poma
+    │   └── README.md
+    └── sample - другие sql-пакеты проекта
+        ├── 00_cleanup.sql
+```
+
 ## Usage
 
 * `make config` - создать файл настроек (.env)
@@ -39,6 +58,7 @@
 
 * (1|3|5|6)*.sql - замена `/($_$)($| +#?)/` на `\1\2 /* FILENAME:FILELINE */`
 * 9*.sql - замена `/ -- BOT/` и `/; -- EOT/` на код поддержки тестов
+* *_once.sql - в вызов таких файлов добавляется поддержка однократного запуска с WARNING при изменении md5
 
 ## Алгоритм
 
