@@ -272,7 +272,7 @@ config:
 
 # colors: https://linux.101hacks.com/ps1-examples/prompt-color-using-tput/
 define POMA_LOG_PARSER
-TEST_CNT=0; \
+test_cnt=0; \
 function log() { \
   local filenew ; \
   local fileold ; \
@@ -283,23 +283,23 @@ function log() { \
     d=$${data#* WARNING:  ::} ; \
     dn=$${data#* NOTICE: } ; \
 	if [[ "$$data" != "$$total" ]] ; then \
-    if [[ "$$TEST_CNT" != "0" ]] ; then \
+    if [[ "$$test_cnt" != "0" ]] ; then \
 	 tput setaf 2 2>/dev/null ; \
 	 echo "ok $$out" ; \
 	 out=""; \
 	 tput sgr0 2>/dev/null ;  \
 	fi ; \
 	[[ "$$total" == "0" ]] || echo "1..$$total" ; \
-	TEST_CNT=0; continue ; \
+	test_cnt=0; continue ; \
 	fi ; \
     if [[ "$$data" != "$$d" ]] ; then \
 	 filenew=$${data%.sql*} ; \
      filenew=$${filenew#*psql:} ; \
      if [[ "$$fileold" != "$$filenew" ]] ; then \
 	  tput setaf 2 2>/dev/null ; \
-      [[ "$$TEST_CNT" == "0" ]] || echo "ok $$out" ; \
-      TEST_CNT=$$(($$TEST_CNT+1)) ; \
-      [[ "$$filenew" ]] && out="$$TEST_CNT - $${filenew%.macro}.sql" ; \
+      [[ "$$test_cnt" == "0" ]] || echo "ok $$out" ; \
+      test_cnt=$$(($$test_cnt+1)) ; \
+      [[ "$$filenew" ]] && out="$$test_cnt - $${filenew%.macro}.sql" ; \
       fileold=$$filenew ; \
 	  tput sgr0 2>/dev/null ;  \
      fi ; \
