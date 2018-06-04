@@ -155,6 +155,7 @@ CREATE OR REPLACE FUNCTION pkg_op_before(
 , a_log_name   TEXT
 , a_user_name  TEXT
 , a_ssh_client TEXT
+, a_blank      TEXT DEFAULT 'blank.sql'
 ) RETURNS TEXT VOLATILE LANGUAGE 'plpgsql' AS
 $_$
   -- a_op:          стадия
@@ -239,6 +240,7 @@ CREATE OR REPLACE FUNCTION pkg_op_after(
 , a_log_name   TEXT
 , a_user_name  TEXT
 , a_ssh_client TEXT
+, a_blank      TEXT DEFAULT 'blank.sql'
 ) RETURNS TEXT VOLATILE LANGUAGE 'plpgsql' AS
 $_$
   -- a_op:           стадия
