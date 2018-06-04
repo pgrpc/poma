@@ -174,7 +174,7 @@ $_$
     r_pkg := poma.pkg(a_code);
     CASE a_op
       WHEN 'create' THEN
-        IF r_pkg IS NOT NULL AND a_schema = ANY(r_pkg.schemas)THEN
+        IF r_pkg IS NOT NULL AND a_schema = ANY(r_pkg.schemas) THEN
           RAISE EXCEPTION '***************** Package % schema % installed already at % (%) *****************'
           , a_code, a_schema, r_pkg.stamp, r_pkg.id
           ;
@@ -227,8 +227,9 @@ $_$
           RAISE EXCEPTION '***************** Package % is required by others (%) *****************', a_code, v_pkgs;
         END IF;
         PERFORM poma.pkg_references(FALSE, a_code, a_schema);
+        IF r_pkg IS NOT NULL AND a_schema = ANY(r_pkg.schemas) THEN RETURN a_blank; END IF;
     END CASE;
-    RETURN 'Begin ' || a_op || ' for '|| a_code;
+    RETURN a_code || '-' || a_op || '.psql';
   END;
 $_$;
 
@@ -290,10 +291,11 @@ $_$
             WHERE code = a_code
           ;
         END IF;
+        IF a_schema = ANY(r_pkg.schemas) THEN RETURN a_blank; END IF;
       WHEN 'build' THEN
         NULL;
     END CASE;
-    RETURN 'End ' || a_op || ' for '|| a_code;
+    RETURN a_code || '-' || a_op || '.psql';
   END;
 $_$;
 
@@ -307,6 +309,7 @@ $_$
   END
 $_$;
 
+/* ------------------------------------------------------------------------- */
 CREATE OR REPLACE FUNCTION patch(
   a_pkg TEXT
 , a_md5 TEXT
@@ -335,6 +338,7 @@ BEGIN
 END;
 $_$; -- VOLATILE
 COMMENT ON FUNCTION patch(TEXT,TEXT,TEXT,TEXT,TEXT) IS 'Регистрация скриптов обновления БД';
+
 /* ------------------------------------------------------------------------- */
 CREATE OR REPLACE FUNCTION raise_on_errors(errors TEXT) RETURNS void LANGUAGE 'plpgsql' AS
 $_$
