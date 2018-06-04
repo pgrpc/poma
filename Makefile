@@ -128,17 +128,15 @@ reverse = $(if $(1),$(call reverse,$(wordlist 2,$(words $(1)),$(1)))) $(firstwor
 
 #TEST_TTL ?= 0
 LOGFILE ?= $(BUILD_DIR)/build.log
-COUNT_FILE ?= $(BUILD_DIR)/test.cnt
 
 # generate MODE.psql file
 $(BUILD_DIR)/%.psql: $(BUILD_DIR) $(SQL_EMPTY) poma-deps
 	@echo "** $@ / $(POMA_PKG) ** "
 	@mode=$* ; \
-	  echo -n "0" > $(COUNT_FILE) ; \
 	  echo "-- $$mode: $(POMA_PKG) --" > $@ ; \
 		if [[ "$$mode" == "drop" || "$$mode" == "erase" || "$$mode" == "recreate" ]] ; then \
 		  plist="$(call reverse,$(POMA_PKG))" ; m=drop ; else plist="$(POMA_PKG)" ; m=$$mode ; \
-	  fi ; \
+	    fi ; \
 		for p in $$plist ; do \
 			$(MAKE) -s  $(BUILD_DIR)/$$p-$$m.psql MASK="$(MASK)" PKG=$$p MODE=$$m ; \
 			echo "\i $(BUILD_DIR)/$$p-$$m.psql" >> $@ ; \
@@ -148,14 +146,13 @@ $(BUILD_DIR)/%.psql: $(BUILD_DIR) $(SQL_EMPTY) poma-deps
   		for p in $(POMA_PKG) ; do \
 				$(MAKE) -s $(BUILD_DIR)/$$p-$$m.psql MASK="$(MASK_CREATE)" PKG=$$p MODE=$$m ; \
 				echo "\i $(BUILD_DIR)/$$p-$$m.psql" >> $@ ; \
-			done ; \
-		fi
+		done ; \
+	  fi 
 	@[[ "$(DO_COMMIT)" ]] || echo "ROLLBACK; BEGIN;" >> $@
 	@cp $@ $@.back
-	@test_op=$$(cat $$COUNT_FILE) ; total=$$(($$test_op)) ; \
-	  $(POMA_LOG_PARSER) ; \
+	@$(POMA_LOG_PARSER) ; \
 	  psql --no-psqlrc --single-transaction -v VERBOSITY=terse \
-	   -P footer=off -v ON_ERROR_STOP=1 -f $@ 3>&1 1>$$LOGFILE 2>&3 | log $$total
+	   -P footer=off -v ON_ERROR_STOP=1 -f $@ 3>&1 1>$$LOGFILE 2>&3 | log 
 
 $(BUILD_DIR):
 	@[ -d $@ ] || mkdir -p $@
@@ -275,27 +272,36 @@ config:
 
 # colors: https://linux.101hacks.com/ps1-examples/prompt-color-using-tput/
 define POMA_LOG_PARSER
-TEST_CNT=0; \
+test_cnt=0; \
 function log() { \
-  local test_total=$$1 ; \
   local filenew ; \
   local fileold ; \
   ret="0" ; \
-  echo "1..$$test_total" ; \
   while read data ; \
   do \
+    total=$${data#*TOTAL TESTS:} ; \
     d=$${data#* WARNING:  ::} ; \
     dn=$${data#* NOTICE: } ; \
+	if [[ "$$data" != "$$total" ]] ; then \
+    if [[ "$$test_cnt" != "0" ]] ; then \
+	 tput setaf 2 2>/dev/null ; \
+	 echo "ok $$out" ; \
+	 out=""; \
+	 tput sgr0 2>/dev/null ;  \
+	fi ; \
+	[[ "$$total" == "0" ]] || echo "1..$$total" ; \
+	test_cnt=0; continue ; \
+	fi ; \
     if [[ "$$data" != "$$d" ]] ; then \
-     filenew=$${data%.sql*} ; \
+	 filenew=$${data%.sql*} ; \
      filenew=$${filenew#*psql:} ; \
      if [[ "$$fileold" != "$$filenew" ]] ; then \
-      tput setaf 2 2>/dev/null ; \
-      [[ "$$TEST_CNT" == "0" ]] || echo "ok $$out" ; \
-      TEST_CNT=$$(($$TEST_CNT+1)) ; \
-      [[ "$$filenew" ]] && out="$$TEST_CNT - $${filenew%.macro}.sql" ; \
+	  tput setaf 2 2>/dev/null ; \
+      [[ "$$test_cnt" == "0" ]] || echo "ok $$out" ; \
+      test_cnt=$$(($$test_cnt+1)) ; \
+      [[ "$$filenew" ]] && out="$$test_cnt - $${filenew%.macro}.sql" ; \
       fileold=$$filenew ; \
-      tput sgr0 2>/dev/null ;  \
+	  tput sgr0 2>/dev/null ;  \
      fi ; \
      [[ "$$d" ]] && echo "#$$d" ; \
     else \
@@ -346,7 +352,13 @@ $(BUILD_DIR)/$(PKG)-$(MODE).psql: $(PREPS)
 	@if [[ "$(PKG)" != "poma" || "$(MODE)" != "create"  ]] ; then \
 	  echo "SELECT poma.pkg_op_before('$(MODE)', '$(PKG)', '$(PKG)', '$$LOGNAME', '$$USERNAME', '$$SSH_CLIENT');" >> $@ ; \
 	fi
-	@for f in $^ ; do cat $$f >> $@ ; done
+	@ct=0; st=0; \
+	for f in $^ ; do t=$${f##*/9} ; [[ "$$f" == "$$t" ]] || ct=$$(($$ct+1)) ; done; \
+	for f in $^ ; do \
+	    t=$${f##*/9} ; \
+		if [[ "$$f" != "$$t"  && "$$st" == "0" ]] ; then  st=1 ; echo "SELECT poma.test('TOTAL TESTS:$$ct');" >> $@ ; fi ; \
+		cat $$f >> $@ ; \
+	done
 	@if [[ "$(PKG)" != "poma" || "$(MODE)" != "drop" ]] ; then \
 		echo "SELECT poma.pkg_op_after('$(MODE)', '$(PKG)', '$(PKG)', '$$LOGNAME', '$$USERNAME', '$$SSH_CLIENT');" >> $@ ; \
 	fi
@@ -380,7 +392,6 @@ $(BUILD_DIR)/$(PKG)/%.psql: $(SQL_ROOT)/$(PKG)/%.sql
 		    fi ;; \
 		9) \
 		    # test file \
-		    echo -n "+1" >> $(COUNT_FILE) ; \
 		    echo "\\set TEST $$inn" > $$out ; \
 		    echo "\\set TESTOUT $$outn.md" >> $$out ; \
 		    echo "$$POMA_TEST_BEGIN" >> $$out ; \
