@@ -139,13 +139,31 @@ $(BUILD_DIR)/%.psql: $(BUILD_DIR) $(SQL_EMPTY) poma-deps
 	    fi ; \
 		for p in $$plist ; do \
 			$(MAKE) -s  $(BUILD_DIR)/$$p-$$m.psql MASK="$(MASK)" PKG=$$p MODE=$$m ; \
-			echo "\i $(BUILD_DIR)/$$p-$$m.psql" >> $@ ; \
+			#echo "\i $(BUILD_DIR)/$$p-$$m.psql" >> $@ ; \
+				if [[ $$p != "poma" || $$m != "create"  ]] ; then \
+				echo "SELECT poma.pkg_op_before('$$m', '$$p', '$$p', '$$LOGNAME', '$$USERNAME', '$$SSH_CLIENT', '$(SQL_EMPTY)') \gset" >> $@ ; \
+				echo "\i :pkg_op_before" >> $@ ; \
+				#echo "$@" >> $@ ; \
+				else  \
+       				#if [[ $$p != "poma" || $$m != "drop"  ]] ; then \
+				#echo "SELECT poma.pkg_op_after('$$m', '$$p', '$$p', '$$LOGNAME', '$$USERNAME', '$$SSH_CLIENT', '$(SQL_EMPTY)') \gset" >> $@ ; \
+				#echo "\i :pkg_op_after" >> $@ ; \
+				#echo "$@" >> $@ ; \
+				echo "\i $(BUILD_DIR)/$$p-$$m.psql" >> $@ ; \
+				#fi ; \
+				fi ; \
 		done ; \
 	  if [[ "$$mode" == "recreate" ]] ; then \
 	  	m=create ; \
   		for p in $(POMA_PKG) ; do \
 				$(MAKE) -s $(BUILD_DIR)/$$p-$$m.psql MASK="$(MASK_CREATE)" PKG=$$p MODE=$$m ; \
-				echo "\i $(BUILD_DIR)/$$p-$$m.psql" >> $@ ; \
+				if [[ $$p != "poma" || $$m != "drop"  ]] ; then \
+				echo "SELECT poma.pkg_op_after('$$m', '$$p', '$$p', '$$LOGNAME', '$$USERNAME', '$$SSH_CLIENT', '$(SQL_EMPTY)') \gset" >> $@ ; \
+				echo "\i :pkg_op_after" >> $@ ; \
+				#echo "\i $@" >> $@ ; \
+				#else echo "\i $(BUILD_DIR)/$$p-$$m.psql" >> $@ ; \
+				fi ; \
+				#echo "\i $(BUILD_DIR)/$$p-$$m.psql" >> $@ ; \
 		done ; \
 	  fi 
 	@[[ "$(DO_COMMIT)" ]] || echo "ROLLBACK; BEGIN;" >> $@
@@ -349,9 +367,6 @@ $(BUILD_DIR)/$(PKG)-$(MODE).psql: $(PREPS)
 	@echo " ** $@ **"
 	@echo "-- generated for mode $(MODE)" > $@
 	@echo "\set PKG $(PKG)" >> $@
-	@if [[ "$(PKG)" != "poma" || "$(MODE)" != "create"  ]] ; then \
-	  echo "SELECT poma.pkg_op_before('$(MODE)', '$(PKG)', '$(PKG)', '$$LOGNAME', '$$USERNAME', '$$SSH_CLIENT');" >> $@ ; \
-	fi
 	@ct=0; st=0; \
 	for f in $^ ; do t=$${f##*/9} ; [[ "$$f" == "$$t" ]] || ct=$$(($$ct+1)) ; done; \
 	for f in $^ ; do \
@@ -359,9 +374,6 @@ $(BUILD_DIR)/$(PKG)-$(MODE).psql: $(PREPS)
 		if [[ "$$f" != "$$t"  && "$$st" == "0" ]] ; then  st=1 ; echo "SELECT poma.test('TOTAL TESTS:$$ct');" >> $@ ; fi ; \
 		cat $$f >> $@ ; \
 	done
-	@if [[ "$(PKG)" != "poma" || "$(MODE)" != "drop" ]] ; then \
-		echo "SELECT poma.pkg_op_after('$(MODE)', '$(PKG)', '$(PKG)', '$$LOGNAME', '$$USERNAME', '$$SSH_CLIENT');" >> $@ ; \
-	fi
 
 # get first char from string
 #https://stackoverflow.com/a/3710342

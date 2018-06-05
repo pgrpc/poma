@@ -34,9 +34,9 @@ SELECT * FROM poma.array_remove(ARRAY['poma-sample', 'poma', 'mega_scheme'], 'me
 SELECT poma.pkg_op_before('create', 'test_poma', 'test_poma', '', '', '')
 ;
 ```
-|    pkg_op_before     
-|----------------------
-|test_poma-create.psql
+|       pkg_op_before         
+|-----------------------------
+|.build/test_poma-create.psql
 
 ## poma/90_pkg
 
@@ -47,9 +47,9 @@ SELECT poma.pkg_op_before('create', 'test_poma', 'test_poma', '', '', '')
 SELECT poma.pkg_op_after('create', 'test_poma', 'test_poma', '', '', '')
 ;
 ```
-|    pkg_op_after      
-|----------------------
-|test_poma-create.psql
+|        pkg_op_after         
+|-----------------------------
+|.build/test_poma-create.psql
 
 ## poma/90_pkg
 

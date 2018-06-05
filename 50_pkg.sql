@@ -175,7 +175,7 @@ $_$
     CASE a_op
       WHEN 'create' THEN
         IF r_pkg IS NOT NULL AND a_schema = ANY(r_pkg.schemas) THEN
-          RAISE EXCEPTION '***************** Package % schema % installed already at % (%) *****************'
+          RAISE WARNING '***************** Package % schema % installed already at % (%) *****************'
           , a_code, a_schema, r_pkg.stamp, r_pkg.id
           ;
         END IF;
@@ -211,7 +211,7 @@ $_$
           RETURNING * INTO r_pkg
         ;
         IF NOT FOUND THEN
-          RAISE EXCEPTION '***************** Package % schema % does not found *****************'
+          RAISE WARNING '***************** Package % schema % does not found *****************'
           , a_code, a_schema
           ;
         END IF;
@@ -224,12 +224,12 @@ $_$
           WHERE code = a_code
         ;
         IF v_pkgs IS NOT NULL THEN
-          RAISE EXCEPTION '***************** Package % is required by others (%) *****************', a_code, v_pkgs;
+          RAISE WARNING '***************** Package % is required by others (%) *****************', a_code, v_pkgs;
         END IF;
         PERFORM poma.pkg_references(FALSE, a_code, a_schema);
-        IF r_pkg IS NOT NULL AND a_schema = ANY(r_pkg.schemas) THEN RETURN a_blank; END IF;
+        IF r_pkg IS NULL OR a_schema <> ANY(r_pkg.schemas) THEN RETURN a_blank; END IF;
     END CASE;
-    RETURN a_code || '-' || a_op || '.psql';
+    RETURN '.build/' || a_code || '-' || a_op || '.psql';
   END;
 $_$;
 
@@ -274,7 +274,6 @@ $_$
           VALUES (NEXTVAL('poma.pkg_id_seq'), a_code, ARRAY[a_schema], a_log_name, a_user_name, a_ssh_client, a_op)
         ;
 
-
         IF a_op = 'erase' AND a_schema <> 'poma' THEN
           DELETE FROM poma.pkg_script_protected  WHERE pkg = a_schema;
           DELETE FROM poma.pkg_default_protected WHERE pkg = a_schema;
@@ -295,7 +294,7 @@ $_$
       WHEN 'build' THEN
         NULL;
     END CASE;
-    RETURN a_code || '-' || a_op || '.psql';
+    RETURN '.build/' || a_code || '-' || a_op || '.psql';
   END;
 $_$;
 
