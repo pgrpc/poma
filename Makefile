@@ -353,9 +353,10 @@ $(BUILD_DIR)/$(PKG)-$(MODE).psql: $(PREPS)
 	  echo "SELECT poma.pkg_op_before('$(MODE)', '$(PKG)', '$(PKG)', '$$LOGNAME', '$$USERNAME', '$$SSH_CLIENT');" >> $@ ; \
 	fi
 	@ct=0; st=0; \
-	for f in $^ ; do t=$${f##*/9} ; [[ "$$f" == "$$t" ]] || ct=$$(($$ct+1)) ; done; \
+	for f in $^ ; do t=$${f##*/9} ; [[ "$${t%.macro.psql}" == "$$t" && "$$f" != "$$t" ]] && ct=$$(($$ct+1)) ; done; \
 	for f in $^ ; do \
 	    t=$${f##*/9} ; \
+		[[ "$${t%.macro.psql}" != "$$t" && "$$f" != "$$t" ]] && continue ; \
 		if [[ "$$f" != "$$t"  && "$$st" == "0" ]] ; then  st=1 ; echo "SELECT poma.test('TOTAL TESTS:$$ct');" >> $@ ; fi ; \
 		cat $$f >> $@ ; \
 	done
@@ -392,13 +393,19 @@ $(BUILD_DIR)/$(PKG)/%.psql: $(SQL_ROOT)/$(PKG)/%.sql
 		    fi ;; \
 		9) \
 		    # test file \
-		    echo "\\set TEST $$inn" > $$out ; \
+		    if [[ "$${in%.macro.sql}" == "$$in" ]] ; then  \
+			echo "\\set TEST $$inn" > $$out ; \
 		    echo "\\set TESTOUT $$outn.md" >> $$out ; \
+			echo "\\set BUILD_DIR $(BUILD_DIR)/" >> $$out ; \
 		    echo "$$POMA_TEST_BEGIN" >> $$out ; \
 		    $(AWK) '{ gsub(/ *-- *BOT/, "\n\\qecho '\''#  t/'\'':TEST\nSELECT :'\''TEST'\''\n\\set QUIET on\n\\pset t on\n\\g :OUTT\n\\pset t off\n\\set QUIET on"); gsub(/; *-- *EOT/, "\n\\w :OUTW\n\\g :OUTG"); print }' $< >> $$out ; \
 		    echo "\! diff $$innr.md $$outn.md | tr \"\t\" ' ' > $(BUILD_DIR)/errors.diff" >> $$out ; \
 		    echo "$$POMA_TEST_END" >> $$out ; \
-		    echo "\i $$out" > $@ ;; \
+		    echo "\i $$out" > $@ ; \
+			else \
+		    $(AWK) '{ gsub(/ *-- *BOT/, "\n\\qecho '\''#  t/'\'':TEST\nSELECT :'\''TEST'\''\n\\set QUIET on\n\\pset t on\n\\g :OUTT\n\\pset t off\n\\set QUIET on"); gsub(/; *-- *EOT/, "\n\\w :OUTW\n\\g :OUTG"); print }' $< >> $$out ; \
+		    echo "\i $$out" > $@ ; \
+			fi ;; \
 		*) \
 		    echo "\i $<" > $@ ;; \
 		esac ; \
