@@ -172,6 +172,7 @@ $_$
     v_pkgs         TEXT;
   BEGIN
     r_pkg := poma.pkg(a_code);
+    IF upper(a_blank) = 'NULL' THEN a_blank := NULL; END IF;
     CASE a_op
       WHEN 'create' THEN
         IF r_pkg IS NOT NULL AND a_schema = ANY(r_pkg.schemas) AND a_blank IS NULL THEN
@@ -227,7 +228,7 @@ $_$
           RAISE EXCEPTION '***************** Package % is required by others (%) *****************', a_code, v_pkgs;
         END IF;
         PERFORM poma.pkg_references(FALSE, a_code, a_schema);
-        IF r_pkg IS NULL OR a_schema <> ANY(r_pkg.schemas) THEN RETURN a_blank; END IF;
+        IF (r_pkg IS NULL OR a_schema <> ANY(r_pkg.schemas)) AND a_blank IS NOT NULL THEN RETURN a_blank; END IF;
     END CASE;
     RETURN a_code || '-' || a_op || '.psql';
   END;
@@ -257,6 +258,7 @@ $_$
     v_self_default TEXT;
   BEGIN
     r_pkg := poma.pkg(a_code);
+    IF upper(a_blank) = 'NULL' THEN a_blank = NULL; END IF;
     CASE a_op
       WHEN 'create' THEN
         IF a_code = 'poma' AND a_schema = 'poma' THEN
@@ -290,7 +292,7 @@ $_$
             WHERE code = a_code
           ;
         END IF;
-        IF a_schema <> ANY(r_pkg.schemas) THEN RETURN a_blank; END IF;
+        IF a_schema <> ANY(r_pkg.schemas) AND a_blank IS NOT NULL THEN RETURN a_blank; END IF;
       WHEN 'build' THEN
         NULL;
     END CASE;
