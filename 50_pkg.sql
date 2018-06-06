@@ -175,7 +175,7 @@ $_$
     CASE a_op
       WHEN 'create' THEN
         IF r_pkg IS NOT NULL AND a_schema = ANY(r_pkg.schemas) THEN
-          RAISE WARNING '***************** Package % schema % installed already at % (%) *****************'
+          RAISE EXCEPTION '***************** Package % schema % installed already at % (%) *****************'
           , a_code, a_schema, r_pkg.stamp, r_pkg.id
           ;
         END IF;
@@ -211,7 +211,7 @@ $_$
           RETURNING * INTO r_pkg
         ;
         IF NOT FOUND THEN
-          RAISE WARNING '***************** Package % schema % does not found *****************'
+          RAISE EXCEPTION '***************** Package % schema % does not found *****************'
           , a_code, a_schema
           ;
         END IF;
@@ -224,7 +224,7 @@ $_$
           WHERE code = a_code
         ;
         IF v_pkgs IS NOT NULL THEN
-          RAISE WARNING '***************** Package % is required by others (%) *****************', a_code, v_pkgs;
+          RAISE EXCEPTION '***************** Package % is required by others (%) *****************', a_code, v_pkgs;
         END IF;
         PERFORM poma.pkg_references(FALSE, a_code, a_schema);
         IF r_pkg IS NULL OR a_schema <> ANY(r_pkg.schemas) THEN RETURN a_blank; END IF;
