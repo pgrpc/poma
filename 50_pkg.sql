@@ -155,7 +155,7 @@ CREATE OR REPLACE FUNCTION pkg_op_before(
 , a_log_name   TEXT
 , a_user_name  TEXT
 , a_ssh_client TEXT
-, a_blank      TEXT DEFAULT 'blank.sql'
+, a_blank      TEXT DEFAULT NULL
 ) RETURNS TEXT VOLATILE LANGUAGE 'plpgsql' AS
 $_$
   -- a_op:          стадия
@@ -170,12 +170,11 @@ $_$
     v_sql          TEXT;
     v_self_default TEXT;
     v_pkgs         TEXT;
-    v_is_set_blank BOOLEAN := (a_blank <> 'blank.sql');
   BEGIN
     r_pkg := poma.pkg(a_code);
     CASE a_op
       WHEN 'create' THEN
-        IF r_pkg IS NOT NULL AND a_schema = ANY(r_pkg.schemas) AND NOT v_is_set_blank THEN
+        IF r_pkg IS NOT NULL AND a_schema = ANY(r_pkg.schemas) AND a_blank IS NULL THEN
           RAISE EXCEPTION '***************** Package % schema % installed already at % (%) *****************'
           , a_code, a_schema, r_pkg.stamp, r_pkg.id
           ;
@@ -211,7 +210,7 @@ $_$
         WHERE code = a_code
           RETURNING * INTO r_pkg
         ;
-        IF NOT FOUND AND NOT v_is_set_blank THEN
+        IF NOT FOUND AND a_blank IS NULL THEN
           RAISE EXCEPTION '***************** Package % schema % does not found *****************'
           , a_code, a_schema
           ;
@@ -224,7 +223,7 @@ $_$
           FROM poma.pkg_required_by 
           WHERE code = a_code
         ;
-        IF v_pkgs IS NOT NULL AND NOT v_is_set_blank THEN
+        IF v_pkgs IS NOT NULL AND a_blank IS NULL THEN
           RAISE EXCEPTION '***************** Package % is required by others (%) *****************', a_code, v_pkgs;
         END IF;
         PERFORM poma.pkg_references(FALSE, a_code, a_schema);
@@ -242,7 +241,7 @@ CREATE OR REPLACE FUNCTION pkg_op_after(
 , a_log_name   TEXT
 , a_user_name  TEXT
 , a_ssh_client TEXT
-, a_blank      TEXT DEFAULT 'blank.sql'
+, a_blank      TEXT DEFAULT NULL
 ) RETURNS TEXT VOLATILE LANGUAGE 'plpgsql' AS
 $_$
   -- a_op:           стадия
