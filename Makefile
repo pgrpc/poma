@@ -7,7 +7,8 @@ MD5SUM       ?= $(shell command -v md5sum 2> /dev/null)
 DIFF         ?= $(shell command -v diff 2> /dev/null)
 
 BUILD_DIR    ?= .build
-SQL_EMPTY    ?= $(BUILD_DIR)/empty.sql
+EMPTY_FILE   ?= empty.sql
+SQL_EMPTY    ?= $(BUILD_DIR)/$(EMPTY_FILE)
 CFG          ?= .env
 
 # App name, default for db user/name
@@ -140,10 +141,9 @@ $(BUILD_DIR)/%.psql: $(BUILD_DIR) $(SQL_EMPTY) poma-deps
 	for p in $$plist ; do \
 		if [[ "$$mode" == "drop" || "$$mode" == "erase" || "$$mode" == "recreate" ]] ; then m=drop ; else m=$$mode ; fi ; \
 		$(MAKE) -s  $(BUILD_DIR)/$$p-$$m.psql MASK="$(MASK)" PKG=$$p MODE=$$m ; \
-		#echo "\i $(BUILD_DIR)/$$p-$$m.psql" >> $@ ; \
 		if [[ $$p != "poma" || $$m != "create"  ]] ; then \
-			echo "SELECT poma.pkg_op_before('$$m', '$$p', '$$p', '$$LOGNAME', '$$USERNAME', '$$SSH_CLIENT', '$(SQL_EMPTY)') \gset" >> $@ ; \
-			echo "\i :pkg_op_before" >> $@ ; \
+			echo "SELECT poma.pkg_op_before('$$m', '$$p', '$$p', '$$LOGNAME', '$$USERNAME', '$$SSH_CLIENT', '$(EMPTY_FILE)') \gset" >> $@ ; \
+			echo "\i $(BUILD_DIR)/:pkg_op_before" >> $@ ; \
 		else  \
 			echo "\i $(BUILD_DIR)/$$p-$$m.psql" >> $@ ; \
 		fi ; \
@@ -151,10 +151,9 @@ $(BUILD_DIR)/%.psql: $(BUILD_DIR) $(SQL_EMPTY) poma-deps
 			m=create ; \
 			$(MAKE) -s $(BUILD_DIR)/$$p-$$m.psql MASK="$(MASK_CREATE)" PKG=$$p MODE=$$m ; \
 			if [[ $$p != "poma" || $$m != "drop"  ]] ; then \
-				echo "SELECT poma.pkg_op_after('$$m', '$$p', '$$p', '$$LOGNAME', '$$USERNAME', '$$SSH_CLIENT', '$(SQL_EMPTY)') \gset" >> $@ ; \
-				echo "\i :pkg_op_after" >> $@ ; \
+				echo "SELECT poma.pkg_op_after('$$m', '$$p', '$$p', '$$LOGNAME', '$$USERNAME', '$$SSH_CLIENT', '$(EMPTY_FILE)') \gset" >> $@ ; \
+				echo "\i $(BUILD_DIR)/:pkg_op_after" >> $@ ; \
 			fi ; \
-			#echo "\i $(BUILD_DIR)/$$p-$$m.psql" >> $@ ; \
 		fi ; \
 	done
 	@[[ "$(DO_COMMIT)" ]] || echo "ROLLBACK; BEGIN;" >> $@

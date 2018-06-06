@@ -229,7 +229,7 @@ $_$
         PERFORM poma.pkg_references(FALSE, a_code, a_schema);
         IF r_pkg IS NULL OR a_schema <> ANY(r_pkg.schemas) THEN RETURN a_blank; END IF;
     END CASE;
-    RETURN '.build/' || a_code || '-' || a_op || '.psql';
+    RETURN a_code || '-' || a_op || '.psql';
   END;
 $_$;
 
@@ -294,7 +294,7 @@ $_$
       WHEN 'build' THEN
         NULL;
     END CASE;
-    RETURN '.build/' || a_code || '-' || a_op || '.psql';
+    RETURN a_code || '-' || a_op || '.psql';
   END;
 $_$;
 
