@@ -290,7 +290,7 @@ $_$
             WHERE code = a_code
           ;
         END IF;
-        IF a_schema = ANY(r_pkg.schemas) THEN RETURN a_blank; END IF;
+        IF a_schema <> ANY(r_pkg.schemas) THEN RETURN a_blank; END IF;
       WHEN 'build' THEN
         NULL;
     END CASE;
