@@ -140,7 +140,7 @@ $(BUILD_DIR)/%.psql: $(BUILD_DIR) $(SQL_EMPTY) poma-deps
 		plist="$(call reverse,$(POMA_PKG))" ; else plist="$(POMA_PKG)" ; \
 	fi ; \
 	for p in $$plist ; do \
-                if [[ "$(POMA_STRICT)" != "POMA_STRICT_is_not_set" ]] ; then blank=null ; else blank=$(EMPTY_FILE) ; fi ; \
+                if [[ "$(POMA_STRICT)" != "POMA_STRICT_is_not_set" ]] ; then blank=NULL ; else blank=$(EMPTY_FILE) ; fi ; \
 		if [[ "$$mode" == "drop" || "$$mode" == "erase" || "$$mode" == "recreate" ]] ; then m=drop ; else m=$$mode ; fi ; \
 		$(MAKE) -s  $(BUILD_DIR)/$$p-$$m.psql MASK="$(MASK)" PKG=$$p MODE=$$m ; \
 		if [[ $$p != "poma" || $$m != "create"  ]] ; then \
