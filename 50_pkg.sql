@@ -172,7 +172,6 @@ $_$
     v_pkgs         TEXT;
   BEGIN
     r_pkg := poma.pkg(a_code);
-    IF a_blank = 'NULL' THEN a_blank := NULL; END IF;
     CASE a_op
       WHEN 'create' THEN
         IF r_pkg IS NOT NULL AND a_schema = ANY(r_pkg.schemas) AND a_blank IS NULL THEN
@@ -258,7 +257,6 @@ $_$
     v_self_default TEXT;
   BEGIN
     r_pkg := poma.pkg(a_code);
-    IF a_blank = 'NULL' THEN a_blank = NULL; END IF;
     CASE a_op
       WHEN 'create' THEN
         IF a_code = 'poma' AND a_schema = 'poma' THEN

@@ -140,11 +140,11 @@ $(BUILD_DIR)/%.psql: $(BUILD_DIR) $(SQL_EMPTY) poma-deps
 		plist="$(call reverse,$(POMA_PKG))" ; else plist="$(POMA_PKG)" ; \
 	fi ; \
 	for p in $$plist ; do \
-                if [[ "$(POMA_STRICT)" != "POMA_STRICT_is_not_set" ]] ; then blank=NULL ; else blank=$(EMPTY_FILE) ; fi ; \
+                if [[ "$(POMA_STRICT)" != "POMA_STRICT_is_not_set" ]] ; then blank=NULL ; else blank="'$(EMPTY_FILE)'" ; fi ; \
 		if [[ "$$mode" == "drop" || "$$mode" == "erase" || "$$mode" == "recreate" ]] ; then m=drop ; else m=$$mode ; fi ; \
 		$(MAKE) -s  $(BUILD_DIR)/$$p-$$m.psql MASK="$(MASK)" PKG=$$p MODE=$$m ; \
 		if [[ $$p != "poma" || $$m != "create"  ]] ; then \
-			echo "SELECT poma.pkg_op_before('$$m', '$$p', '$$p', '$$LOGNAME', '$$USERNAME', '$$SSH_CLIENT', '$$blank') \gset" >> $@ ; \
+			echo "SELECT poma.pkg_op_before('$$m', '$$p', '$$p', '$$LOGNAME', '$$USERNAME', '$$SSH_CLIENT', $$blank) \gset" >> $@ ; \
 			echo "\i $(BUILD_DIR)/:pkg_op_before" >> $@ ; \
 		else  \
 			echo "\i $(BUILD_DIR)/$$p-$$m.psql" >> $@ ; \
@@ -153,7 +153,7 @@ $(BUILD_DIR)/%.psql: $(BUILD_DIR) $(SQL_EMPTY) poma-deps
 			m=create ; \
 			$(MAKE) -s $(BUILD_DIR)/$$p-$$m.psql MASK="$(MASK_CREATE)" PKG=$$p MODE=$$m ; \
 			if [[ $$p != "poma" || $$m != "drop"  ]] ; then \
-				echo "SELECT poma.pkg_op_after('$$m', '$$p', '$$p', '$$LOGNAME', '$$USERNAME', '$$SSH_CLIENT', '$$blank') \gset" >> $@ ; \
+				echo "SELECT poma.pkg_op_after('$$m', '$$p', '$$p', '$$LOGNAME', '$$USERNAME', '$$SSH_CLIENT', $$blank) \gset" >> $@ ; \
 				echo "\i $(BUILD_DIR)/:pkg_op_after" >> $@ ; \
 			fi ; \
 		fi ; \
