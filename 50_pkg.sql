@@ -35,7 +35,7 @@ $_$
 $_$;
 
 /* ------------------------------------------------------------------------- */
-CREATE OR REPLACE FUNCTION pkg(a_code TEXT) RETURNS pkg STABLE LANGUAGE 'sql' AS
+CREATE OR REPLACE FUNCTION pkg(a_code TEXT) RETURNS SETOF pkg STABLE LANGUAGE 'sql' AS
 $_$
   -- a_code:  пакет
   SELECT * FROM poma.pkg WHERE code = $1;
