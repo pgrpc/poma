@@ -7,8 +7,10 @@ MD5SUM       ?= $(shell command -v md5sum 2> /dev/null)
 DIFF         ?= $(shell command -v diff 2> /dev/null)
 
 BUILD_DIR    ?= .build
-SQL_EMPTY    ?= $(BUILD_DIR)/empty.sql
+EMPTY_FILE   ?= empty.sql
+SQL_EMPTY    ?= $(BUILD_DIR)/$(EMPTY_FILE)
 CFG          ?= .env
+POMA_STRICT  ?=  POMA_STRICT_is_not_set
 
 # App name, default for db user/name
 PRG          ?= $(shell basename $$PWD)
@@ -133,21 +135,29 @@ LOGFILE ?= $(BUILD_DIR)/build.log
 $(BUILD_DIR)/%.psql: $(BUILD_DIR) $(SQL_EMPTY) poma-deps
 	@echo "** $@ / $(POMA_PKG) ** "
 	@mode=$* ; \
-	  echo "-- $$mode: $(POMA_PKG) --" > $@ ; \
-		if [[ "$$mode" == "drop" || "$$mode" == "erase" || "$$mode" == "recreate" ]] ; then \
-		  plist="$(call reverse,$(POMA_PKG))" ; m=drop ; else plist="$(POMA_PKG)" ; m=$$mode ; \
-	    fi ; \
-		for p in $$plist ; do \
-			$(MAKE) -s  $(BUILD_DIR)/$$p-$$m.psql MASK="$(MASK)" PKG=$$p MODE=$$m ; \
+	echo "-- $$mode: $(POMA_PKG) --" > $@ ; \
+	if [[ "$$mode" == "drop" || "$$mode" == "erase" || "$$mode" == "recreate" ]] ; then \
+		plist="$(call reverse,$(POMA_PKG))" ; else plist="$(POMA_PKG)" ; \
+	fi ; \
+	for p in $$plist ; do \
+                if [[ "$(POMA_STRICT)" != "POMA_STRICT_is_not_set" ]] ; then blank=NULL ; else blank="'$(EMPTY_FILE)'" ; fi ; \
+		if [[ "$$mode" == "drop" || "$$mode" == "erase" || "$$mode" == "recreate" ]] ; then m=drop ; else m=$$mode ; fi ; \
+		$(MAKE) -s  $(BUILD_DIR)/$$p-$$m.psql MASK="$(MASK)" PKG=$$p MODE=$$m ; \
+		if [[ $$p != "poma" || $$m != "create"  ]] ; then \
+			echo "SELECT poma.pkg_op_before('$$m', '$$p', '$$p', '$$LOGNAME', '$$USERNAME', '$$SSH_CLIENT', $$blank) \gset" >> $@ ; \
+			echo "\i $(BUILD_DIR)/:pkg_op_before" >> $@ ; \
+		else  \
 			echo "\i $(BUILD_DIR)/$$p-$$m.psql" >> $@ ; \
-		done ; \
-	  if [[ "$$mode" == "recreate" ]] ; then \
-	  	m=create ; \
-  		for p in $(POMA_PKG) ; do \
-				$(MAKE) -s $(BUILD_DIR)/$$p-$$m.psql MASK="$(MASK_CREATE)" PKG=$$p MODE=$$m ; \
-				echo "\i $(BUILD_DIR)/$$p-$$m.psql" >> $@ ; \
-		done ; \
-	  fi 
+		fi ; \
+		if [[ "$$mode" == "recreate" ]] ; then \
+			m=create ; \
+			$(MAKE) -s $(BUILD_DIR)/$$p-$$m.psql MASK="$(MASK_CREATE)" PKG=$$p MODE=$$m ; \
+			if [[ $$p != "poma" || $$m != "drop"  ]] ; then \
+				echo "SELECT poma.pkg_op_after('$$m', '$$p', '$$p', '$$LOGNAME', '$$USERNAME', '$$SSH_CLIENT', $$blank) \gset" >> $@ ; \
+				echo "\i $(BUILD_DIR)/:pkg_op_after" >> $@ ; \
+			fi ; \
+		fi ; \
+	done
 	@[[ "$(DO_COMMIT)" ]] || echo "ROLLBACK; BEGIN;" >> $@
 	@cp $@ $@.back
 	@$(POMA_LOG_PARSER) ; \
@@ -349,9 +359,6 @@ $(BUILD_DIR)/$(PKG)-$(MODE).psql: $(PREPS)
 	@echo " ** $@ **"
 	@echo "-- generated for mode $(MODE)" > $@
 	@echo "\set PKG $(PKG)" >> $@
-	@if [[ "$(PKG)" != "poma" || "$(MODE)" != "create"  ]] ; then \
-	  echo "SELECT poma.pkg_op_before('$(MODE)', '$(PKG)', '$(PKG)', '$$LOGNAME', '$$USERNAME', '$$SSH_CLIENT');" >> $@ ; \
-	fi
 	@ct=0; st=0; \
 	for f in $^ ; do t=$${f##*/9} ; [[ "$${t%.macro.psql}" == "$$t" && "$$f" != "$$t" ]] && ct=$$(($$ct+1)) ; done; \
 	for f in $^ ; do \
@@ -360,9 +367,6 @@ $(BUILD_DIR)/$(PKG)-$(MODE).psql: $(PREPS)
 		if [[ "$$f" != "$$t"  && "$$st" == "0" ]] ; then  st=1 ; echo "SELECT poma.test('TOTAL TESTS:$$ct');" >> $@ ; fi ; \
 		cat $$f >> $@ ; \
 	done
-	@if [[ "$(PKG)" != "poma" || "$(MODE)" != "drop" ]] ; then \
-		echo "SELECT poma.pkg_op_after('$(MODE)', '$(PKG)', '$(PKG)', '$$LOGNAME', '$$USERNAME', '$$SSH_CLIENT');" >> $@ ; \
-	fi
 
 # get first char from string
 #https://stackoverflow.com/a/3710342

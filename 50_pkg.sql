@@ -155,6 +155,7 @@ CREATE OR REPLACE FUNCTION pkg_op_before(
 , a_log_name   TEXT
 , a_user_name  TEXT
 , a_ssh_client TEXT
+, a_blank      TEXT DEFAULT NULL
 ) RETURNS TEXT VOLATILE LANGUAGE 'plpgsql' AS
 $_$
   -- a_op:          стадия
@@ -173,7 +174,7 @@ $_$
     r_pkg := poma.pkg(a_code);
     CASE a_op
       WHEN 'create' THEN
-        IF r_pkg IS NOT NULL AND a_schema = ANY(r_pkg.schemas)THEN
+        IF r_pkg IS NOT NULL AND a_schema = ANY(r_pkg.schemas) AND a_blank IS NULL THEN
           RAISE EXCEPTION '***************** Package % schema % installed already at % (%) *****************'
           , a_code, a_schema, r_pkg.stamp, r_pkg.id
           ;
@@ -209,7 +210,7 @@ $_$
         WHERE code = a_code
           RETURNING * INTO r_pkg
         ;
-        IF NOT FOUND THEN
+        IF NOT FOUND AND a_blank IS NULL THEN
           RAISE EXCEPTION '***************** Package % schema % does not found *****************'
           , a_code, a_schema
           ;
@@ -222,12 +223,13 @@ $_$
           FROM poma.pkg_required_by 
           WHERE code = a_code
         ;
-        IF v_pkgs IS NOT NULL THEN
+        IF v_pkgs IS NOT NULL AND a_blank IS NULL THEN
           RAISE EXCEPTION '***************** Package % is required by others (%) *****************', a_code, v_pkgs;
         END IF;
         PERFORM poma.pkg_references(FALSE, a_code, a_schema);
+        IF (r_pkg IS NULL OR a_schema <> ANY(r_pkg.schemas)) AND a_blank IS NOT NULL THEN RETURN a_blank; END IF;
     END CASE;
-    RETURN 'Begin ' || a_op || ' for '|| a_code;
+    RETURN a_code || '-' || a_op || '.psql';
   END;
 $_$;
 
@@ -239,6 +241,7 @@ CREATE OR REPLACE FUNCTION pkg_op_after(
 , a_log_name   TEXT
 , a_user_name  TEXT
 , a_ssh_client TEXT
+, a_blank      TEXT DEFAULT NULL
 ) RETURNS TEXT VOLATILE LANGUAGE 'plpgsql' AS
 $_$
   -- a_op:           стадия
@@ -271,7 +274,6 @@ $_$
           VALUES (NEXTVAL('poma.pkg_id_seq'), a_code, ARRAY[a_schema], a_log_name, a_user_name, a_ssh_client, a_op)
         ;
 
-
         IF a_op = 'erase' AND a_schema <> 'poma' THEN
           DELETE FROM poma.pkg_script_protected  WHERE pkg = a_schema;
           DELETE FROM poma.pkg_default_protected WHERE pkg = a_schema;
@@ -288,10 +290,11 @@ $_$
             WHERE code = a_code
           ;
         END IF;
+        IF a_schema <> ANY(r_pkg.schemas) AND a_blank IS NOT NULL THEN RETURN a_blank; END IF;
       WHEN 'build' THEN
         NULL;
     END CASE;
-    RETURN 'End ' || a_op || ' for '|| a_code;
+    RETURN a_code || '-' || a_op || '.psql';
   END;
 $_$;
 
@@ -305,6 +308,7 @@ $_$
   END
 $_$;
 
+/* ------------------------------------------------------------------------- */
 CREATE OR REPLACE FUNCTION patch(
   a_pkg TEXT
 , a_md5 TEXT
@@ -333,6 +337,7 @@ BEGIN
 END;
 $_$; -- VOLATILE
 COMMENT ON FUNCTION patch(TEXT,TEXT,TEXT,TEXT,TEXT) IS 'Регистрация скриптов обновления БД';
+
 /* ------------------------------------------------------------------------- */
 CREATE OR REPLACE FUNCTION raise_on_errors(errors TEXT) RETURNS void LANGUAGE 'plpgsql' AS
 $_$
