@@ -259,7 +259,7 @@ $_$
     r_pkg := poma.pkg(a_code);
     CASE a_op
       WHEN 'create' THEN
-        IF a_code = 'poma' AND a_schema = 'poma' THEN
+        IF r_pkg IS NULL THEN
           INSERT INTO poma.pkg (id, code, schemas, log_name, user_name, ssh_client, op) VALUES 
             (NEXTVAL('poma.pkg_id_seq'), a_code, ARRAY[a_schema], a_log_name, a_user_name, a_ssh_client, a_op)
             RETURNING * INTO r_pkg
