@@ -23,7 +23,7 @@ SELECT poma.test('pkg_op_before'); -- BOT
 /*
   Тест pkg_op_before
 */
-SELECT poma.pkg_op_before('create', 'test_poma', 'test_poma', '', '', ''); -- EOT
+SELECT poma.pkg_op_before('create', 'test_poma', 'test_poma', '', '', '', 'POMA_STRICT_is_set'); -- EOT
 --TODO: RAISE EXCEPTION отработать utils.exception_test из pgm
 /* ------------------------------------------------------------------------- */
 
@@ -32,7 +32,7 @@ SELECT poma.test('pkg_op_after'); -- BOT
 /*
   Тест pkg_op_after
 */
-SELECT poma.pkg_op_after('create', 'test_poma', 'test_poma', '', '', ''); -- EOT
+SELECT poma.pkg_op_after('create', 'test_poma', 'test_poma', '', '', '', 'POMA_STRICT_is_set'); -- EOT
 --TODO: RAISE EXCEPTION отработать utils.exception_test из pgm
 /* ------------------------------------------------------------------------- */
 
