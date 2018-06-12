@@ -160,9 +160,22 @@ $(BUILD_DIR)/%.psql: $(BUILD_DIR) $(SQL_EMPTY) poma-deps
 	done
 	@[[ "$(DO_COMMIT)" ]] || echo "ROLLBACK; BEGIN;" >> $@
 	@cp $@ $@.back
-	@$(POMA_LOG_PARSER) ; \
-	  psql --no-psqlrc --single-transaction -v VERBOSITY=terse \
-	   -P footer=off -v ON_ERROR_STOP=1 -f $@ 3>&1 1>$$LOGFILE 2>&3 | log 
+	if [[ "$(PSQL_VIA)" != "docker" ]] ; then \
+	  $(POMA_LOG_PARSER) ; \
+	    psql --no-psqlrc --single-transaction -v VERBOSITY=terse \
+	     -P footer=off -v ON_ERROR_STOP=1 -f $@ 3>&1 1>$$LOGFILE 2>&3 | log ; \
+	else \
+	  tmp_dir=$(shell mktemp -u) ; \
+	  docker exec -i $$DB_CONTAINER mkdir -p $$tmp_dir ; \
+	  echo "Temp dir: $$tmp_dir" ; \
+	  docker cp sql $$DB_CONTAINER:$$tmp_dir ; \
+	  docker cp .build $$DB_CONTAINER:$$tmp_dir ; \
+	  $(POMA_LOG_PARSER) ; \
+	  docker exec -w $$tmp_dir -e PGPASSWORD=$$PGPASSWORD -i $$DB_CONTAINER psql \
+	    -U $$PGUSER -d $$PGDATABASE --no-psqlrc --single-transaction -v VERBOSITY=terse \
+	    -P footer=off -v ON_ERROR_STOP=1 -f $@ 3>&1 1>$$LOGFILE 2>&3 | log ; \
+	  docker exec -i $$DB_CONTAINER rm -rf $$tmp_dir ; \
+	fi
 
 $(BUILD_DIR):
 	@[ -d $@ ] || mkdir -p $@
@@ -222,13 +235,13 @@ rmd-%:
 	@[ ! -d $* ] || rm -rf $*
 
 ## run psql
-psql: psql-${PSQL_VIA}
+psql: psql-$(PSQL_VIA)
 
 psql-psql:
 	@psql
 
 psql-docker: .docker-wait
-	@docker exec -ti $$DB_CONTAINER psql -U $$PGUSER
+	@docker exec -ti $$DB_CONTAINER psql -U $$PGUSER -d $$PGDATABASE
 
 .PHONY: config clean
 
