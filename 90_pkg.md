@@ -31,7 +31,7 @@ SELECT * FROM poma.array_remove(ARRAY['poma-sample', 'poma', 'mega_scheme'], 'me
 /*
   Тест pkg_op_before
 */
-SELECT poma.pkg_op_before('create', 'test_poma', 'test_poma', '', '', '')
+SELECT poma.pkg_op_before('create', 'test_poma', 'test_poma', '', '', '', 'POMA_STRICT_is_set')
 ;
 ```
 |    pkg_op_before     
@@ -44,7 +44,7 @@ SELECT poma.pkg_op_before('create', 'test_poma', 'test_poma', '', '', '')
 /*
   Тест pkg_op_after
 */
-SELECT poma.pkg_op_after('create', 'test_poma', 'test_poma', '', '', '')
+SELECT poma.pkg_op_after('create', 'test_poma', 'test_poma', '', '', '', 'POMA_STRICT_is_set')
 ;
 ```
 |    pkg_op_after      
