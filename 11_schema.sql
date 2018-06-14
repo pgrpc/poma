@@ -7,4 +7,4 @@
 \conninfo
 
 -- Создание схемы
-CREATE SCHEMA IF NOT EXISTS :PKG;
+CREATE SCHEMA :PKG;

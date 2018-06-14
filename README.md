@@ -30,7 +30,7 @@ poma-sample
  списки пакетов именуются и размещаются в основном Makefile проекта. Пример для списка с именем `all`:
 
 ```
-%-all: POMA_PKG=poma sample
+%-all: POMA_PKG=sample1 sample2
 ```
 В результате, для работы с этим списком пакетов, к целям ниже (кроме `config`) добавятся аналогичные с суффиксом `-all`.
  Если суффикс не указан, по умолчанию используется `%-default`. Пример - см. Makefile проекта
@@ -39,12 +39,14 @@ poma-sample
 В результате `include sql/poma/Makefile`, основной Makefile проекта будет поддерживать следующие цели:
 
 * `make config` - создать файл настроек (.env) всего проекта
+* `make poma-install` - создать схему poma
 * `make poma-create[-default]` - первичное создание пакета
 * `make poma-build[-default]` - сборка хранимого кода
 * `make poma-test[-default]` - запуск тестов
 * `make poma-recreate[-default]` - пересоздание пакетов со сборкой кода
 * `make poma-drop[-default]` - удаление пакета
 * `make poma-erase[-default]` - удаление пакета и его персистентных данных
+* `make poma-uninstall` - удалить схему poma, если нет других пакетов
 
 ## SQL filename
 

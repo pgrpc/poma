@@ -3,35 +3,9 @@
 
 ```sql
 /*
-  Тест pkg_require
-*/
-SELECT * FROM poma.pkg_require('test')
-;
-```
-|pkg_require 
-|------------
-|
-
-## poma/90_pkg
-
-```sql
-/*
-  Тест array_remove
-*/
-SELECT * FROM poma.array_remove(ARRAY['poma-sample', 'poma', 'mega_scheme'], 'mega_scheme')
-;
-```
-|   array_remove    
-|-------------------
-|{poma-sample,poma}
-
-## poma/90_pkg
-
-```sql
-/*
   Тест pkg_op_before
 */
-SELECT poma.pkg_op_before('create', 'test_poma', 'test_poma', '', '', '', 'POMA_STRICT_is_set')
+SELECT poma.pkg_op_before('create', 'test_poma', 'test_poma', '', '', '', 'blank.sql')
 ;
 ```
 |    pkg_op_before     
@@ -44,7 +18,7 @@ SELECT poma.pkg_op_before('create', 'test_poma', 'test_poma', '', '', '', 'POMA_
 /*
   Тест pkg_op_after
 */
-SELECT poma.pkg_op_after('create', 'test_poma', 'test_poma', '', '', '', 'POMA_STRICT_is_set')
+SELECT poma.pkg_op_after('create', 'test_poma', 'test_poma', '', '', '', 'noskip','blank.sql')
 ;
 ```
 |    pkg_op_after      

@@ -10,7 +10,9 @@ BUILD_DIR    ?= .build
 EMPTY_FILE   ?= empty.sql
 SQL_EMPTY    ?= $(BUILD_DIR)/$(EMPTY_FILE)
 CFG          ?= .env
-POMA_STRICT  ?=  POMA_STRICT_is_not_set
+
+# Raise error on create/drop attempt on pkg which exists/not exists (else skip silent)
+POMA_STRICT  ?=
 
 # App name, default for db user/name
 PRG          ?= $(shell basename $$PWD)
@@ -43,6 +45,9 @@ DB_CONTAINER ?= dcape_db_1
 
 # SQL package list
 POMA_PKG     ?= POMA_PKG_must_be_set_in_parent_Makefile
+
+# build log
+LOGFILE      ?= $(BUILD_DIR)/build.log
 
 # -----------------------------------------------------------------------------
 # THERE IS NOTHING TO CHANGE BELOW
@@ -125,11 +130,15 @@ poma-erase-%: MASK = $(MASK_ERASE)
 poma-erase-%: $(BUILD_DIR)/erase.psql
 	@echo "** $@ ** "
 
+poma-install: POMA_PKG=poma
+poma-install: poma-create-poma
+
+poma-uninstall: POMA_PKG=poma
+poma-uninstall: poma-erase-poma
+
+
 # https://stackoverflow.com/a/786530
 reverse = $(if $(1),$(call reverse,$(wordlist 2,$(words $(1)),$(1)))) $(firstword $(1))
-
-#TEST_TTL ?= 0
-LOGFILE ?= $(BUILD_DIR)/build.log
 
 # generate MODE.psql file
 $(BUILD_DIR)/%.psql: $(BUILD_DIR) $(SQL_EMPTY) poma-deps
@@ -139,28 +148,40 @@ $(BUILD_DIR)/%.psql: $(BUILD_DIR) $(SQL_EMPTY) poma-deps
 	if [[ "$$mode" == "drop" || "$$mode" == "erase" || "$$mode" == "recreate" ]] ; then \
 		plist="$(call reverse,$(POMA_PKG))" ; else plist="$(POMA_PKG)" ; \
 	fi ; \
+	if [[ "$(POMA_STRICT)" ]] ; then blank=NULL ; else blank="'$(EMPTY_FILE)'" ; fi ; \
+	if [[ "$$mode" == "recreate" ]] ; then m=drop ; else m=$$mode ; fi ; \
 	for p in $$plist ; do \
-                if [[ "$(POMA_STRICT)" != "POMA_STRICT_is_not_set" ]] ; then blank=NULL ; else blank="'$(EMPTY_FILE)'" ; fi ; \
-		if [[ "$$mode" == "drop" || "$$mode" == "erase" || "$$mode" == "recreate" ]] ; then m=drop ; else m=$$mode ; fi ; \
 		$(MAKE) -s  $(BUILD_DIR)/$$p-$$m.psql MASK="$(MASK)" PKG=$$p MODE=$$m ; \
-		if [[ $$p != "poma" || $$m != "create"  ]] ; then \
-			echo "SELECT poma.pkg_op_before('$$m', '$$p', '$$p', '$$LOGNAME', '$$USERNAME', '$$SSH_CLIENT', $$blank) \gset" >> $@ ; \
-			echo "\i $(BUILD_DIR)/:pkg_op_before" >> $@ ; \
-		else  \
+		if [[ $$m == "test" ]] ; then \
 			echo "\i $(BUILD_DIR)/$$p-$$m.psql" >> $@ ; \
+			continue ; \
 		fi ; \
-		if [[ "$$mode" == "recreate" ]] ; then \
-			m=create ; \
-			$(MAKE) -s $(BUILD_DIR)/$$p-$$m.psql MASK="$(MASK_CREATE)" PKG=$$p MODE=$$m ; \
-			if [[ $$p != "poma" || $$m != "drop"  ]] ; then \
-				echo "SELECT poma.pkg_op_after('$$m', '$$p', '$$p', '$$LOGNAME', '$$USERNAME', '$$SSH_CLIENT', $$blank) \gset" >> $@ ; \
-				echo "\i $(BUILD_DIR)/:pkg_op_after" >> $@ ; \
+		if [[ $$p != "poma" || $$m != "create" ]] ; then \
+			echo "SELECT poma.pkg_op_before('$$m', '$$p', '$$p', '$$LOGNAME', '$$USERNAME', '$$SSH_CLIENT', $$blank) \gset" >> $@ ; \
+		else  \
+			echo "\set pkg_op_before $$p-$$m.psql" >> $@ ; \
+		fi ; \
+		echo "\i $(BUILD_DIR)/:pkg_op_before" >> $@ ; \
+		if [[ $$p != "poma" || $$m == "build" || $$m == "create" ]] ; then \
+			echo "SELECT poma.pkg_op_after('$$m', '$$p', '$$p', '$$LOGNAME', '$$USERNAME', '$$SSH_CLIENT', :'pkg_op_before', $$blank);" >> $@ ; \
+		fi ; \
+	done ; \
+	if [[ "$$mode" == "recreate" ]] ; then \
+		m=create ; \
+		for p in $(POMA_PKG) ; do \
+			$(MAKE) -s  $(BUILD_DIR)/$$p-$$m.psql MASK="$(MASK_CREATE)" PKG=$$p MODE=$$m ; \
+			if [[ $$p != "poma" ]] ; then \
+				echo "SELECT poma.pkg_op_before('$$m', '$$p', '$$p', '$$LOGNAME', '$$USERNAME', '$$SSH_CLIENT', $$blank) \gset" >> $@ ; \
+			else  \
+				echo "\set pkg_op_before $$p-$$m.psql" >> $@ ; \
 			fi ; \
-		fi ; \
-	done
+			echo "\i $(BUILD_DIR)/:pkg_op_before" >> $@ ; \
+			echo "SELECT poma.pkg_op_after('$$m', '$$p', '$$p', '$$LOGNAME', '$$USERNAME', '$$SSH_CLIENT', :'pkg_op_before', $$blank);" >> $@ ; \
+		done ; \
+	fi
 	@[[ "$(DO_COMMIT)" ]] || echo "ROLLBACK; BEGIN;" >> $@
 	@cp $@ $@.back
-	if [[ "$(PSQL_VIA)" != "docker" ]] ; then \
+	@if [[ "$(PSQL_VIA)" != "docker" ]] ; then \
 	  $(POMA_LOG_PARSER) ; \
 	    psql --no-psqlrc --single-transaction -v VERBOSITY=terse \
 	     -P footer=off -v ON_ERROR_STOP=1 -f $@ 3>&1 1>$$LOGFILE 2>&3 | log ; \
@@ -243,7 +264,7 @@ psql-psql:
 psql-docker: .docker-wait
 	@docker exec -ti $$DB_CONTAINER psql -U $$PGUSER -d $$PGDATABASE
 
-.PHONY: config clean
+.PHONY: config poma-clean
 
 define POMA_CONFIG_DEFAULT
 # ------------------------------------------------------------------------------
@@ -416,7 +437,7 @@ $(BUILD_DIR)/$(PKG)/%.psql: $(SQL_ROOT)/$(PKG)/%.sql
 			echo "\\set BUILD_DIR $(BUILD_DIR)/" >> $$out ; \
 		    echo "$$POMA_TEST_BEGIN" >> $$out ; \
 		    $(AWK) '{ gsub(/ *-- *BOT/, "\n\\qecho '\''#  t/'\'':TEST\nSELECT :'\''TEST'\''\n\\set QUIET on\n\\pset t on\n\\g :OUTT\n\\pset t off\n\\set QUIET on"); gsub(/; *-- *EOT/, "\n\\w :OUTW\n\\g :OUTG"); print }' $< >> $$out ; \
-		    echo "\! diff $$innr.md $$outn.md | tr \"\t\" ' ' > $(BUILD_DIR)/errors.diff" >> $$out ; \
+		    echo "\! diff -c $$innr.md $$outn.md | tr \"\t\" ' ' > $(BUILD_DIR)/errors.diff" >> $$out ; \
 		    echo "$$POMA_TEST_END" >> $$out ; \
 		    echo "\i $$out" > $@ ; \
 			else \

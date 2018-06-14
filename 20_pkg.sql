@@ -3,15 +3,16 @@
     Copyright (c) 2010, 2012 Tender.Pro http://tender.pro.
     [SQL_LICENSE]
 
-    Таблицы для компиляции и установки пакетов
+    Таблицы для компилляции и установки пакетов
 */
 CREATE TYPE t_pkg_op AS ENUM ('create', 'build', 'drop', 'erase', 'done'); 
-/* ------------------------------------------------------------------------- */
+-- -----------------------------------------------------------------------------
 CREATE TABLE pkg_log (
   id          INTEGER PRIMARY KEY
 , code        TEXT NOT NULL
 , schemas     name[] NOT NULL
 , op          t_pkg_op
+, version     DECIMAL NOT NULL DEFAULT 0
 , log_name    TEXT
 , user_name   TEXT
 , ssh_client  TEXT
@@ -28,6 +29,7 @@ CREATE TABLE pkg (
 , code        TEXT PRIMARY KEY -- для REFERENCES
 , schemas     name[]
 , op          t_pkg_op
+, version     DECIMAL NOT NULL DEFAULT 0
 , log_name    TEXT
 , user_name   TEXT
 , ssh_client  TEXT
@@ -40,5 +42,6 @@ CREATE TABLE pkg (
 CREATE TABLE pkg_required_by (
   code        name REFERENCES pkg
 , required_by name DEFAULT current_schema() 
+, version     DECIMAL NOT NULL DEFAULT 0
 , CONSTRAINT pkg_required_by_pkey PRIMARY KEY (code, required_by)
 );

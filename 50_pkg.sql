@@ -6,42 +6,14 @@
     Компиляция и установка пакетов
 */
 
-
-/* ------------------------------------------------------------------------- */
-CREATE OR REPLACE FUNCTION array_remove(
-  a ANYARRAY
-, b ANYELEMENT
-) RETURNS ANYARRAY IMMUTABLE LANGUAGE 'sql' AS
-$_$
-  -- a: массив
-  -- b: элемент
-SELECT array_agg(x) FROM unnest($1) x WHERE x <> $2;
-$_$;
-
-/* ------------------------------------------------------------------------- */
-CREATE OR REPLACE FUNCTION test(a_code TEXT) RETURNS TEXT VOLATILE LANGUAGE 'plpgsql' AS
-$_$
-  -- a_code:  сообщение для теста
-  BEGIN
-    -- RAISE WARNING parsed for test output
-    IF a_code IS NULL THEN
-      RAISE WARNING '::';
-    ELSE
-      RAISE WARNING '::%', 't/'||a_code;
-    END IF;
-    -- RETURN saved to .md
-    RETURN a_code;
-  END;
-$_$;
-
-/* ------------------------------------------------------------------------- */
+-- ----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION pkg(a_code TEXT) RETURNS SETOF pkg STABLE LANGUAGE 'sql' AS
 $_$
   -- a_code:  пакет
   SELECT * FROM poma.pkg WHERE code = $1;
 $_$;
 
-/* ------------------------------------------------------------------------- */
+-- ----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION pkg_references(
   a_is_on  BOOL
 , a_pkg    name
@@ -147,7 +119,16 @@ $_$
   END;
 $_$;
 
-/* ------------------------------------------------------------------------- */
+-- ----------------------------------------------------------------------------
+/*
+  Подготовка к выполнению операции с пакетом
+
+  1. Проверить наличие (для create) или отсутствие (для build, drop, erase) пакета.
+    При успехе: вернуть a_blank (если задан) или ошибку (иначе)
+  2. Для drop, erase - вернуть ошибку, если есть зависимости от пакета (poma.pkg_required_by) и
+    удалить зависимости от пакета
+  3. Зарегистрировать операцию в poma.pkg и poma.pkg_log
+*/
 CREATE OR REPLACE FUNCTION pkg_op_before(
   a_op         t_pkg_op
 , a_code       name
@@ -172,32 +153,35 @@ $_$
     v_pkgs         TEXT;
   BEGIN
     r_pkg := poma.pkg(a_code);
-    CASE a_op
-      WHEN 'create' THEN
-        IF r_pkg IS NOT NULL AND a_schema = ANY(r_pkg.schemas) AND a_blank IS NULL THEN
+    IF r_pkg IS NOT NULL AND a_schema = ANY(r_pkg.schemas) THEN
+      -- pkg already exists
+      IF a_op::TEXT = ANY(ARRAY['create']) THEN
+        IF a_blank IS NULL THEN
           RAISE EXCEPTION '***************** Package % schema % installed already at % (%) *****************'
           , a_code, a_schema, r_pkg.stamp, r_pkg.id
           ;
+        ELSE
+          RETURN a_blank;
         END IF;
-        IF r_pkg IS NULL THEN
-          INSERT INTO poma.pkg (id, code, schemas, log_name, user_name, ssh_client, op) VALUES 
-            (NEXTVAL('poma.pkg_id_seq'), a_code, ARRAY[a_schema], a_log_name, a_user_name, a_ssh_client, a_op)
-            RETURNING * INTO r_pkg
+      END IF;
+    ELSE
+      -- pkg does not exists
+      IF a_op::TEXT = ANY(ARRAY['build','drop','erase']) THEN
+        IF a_blank IS NULL THEN
+          RAISE EXCEPTION '***************** Package % schema % does not exists *****************'
+          , a_code, a_schema
           ;
-        ELSE 
-          UPDATE poma.pkg SET
-            id          = NEXTVAL('poma.pkg_id_seq') -- runs after rule
-          , schemas     = array_append(schemas, a_schema)
-          , log_name    = a_log_name
-          , user_name   = a_user_name
-          , ssh_client  = a_ssh_client
-          , stamp       = now()
-          , op          = a_op
-          WHERE code = a_code
-            RETURNING * INTO r_pkg
-          ;
+        ELSE
+          RETURN a_blank;
         END IF;
-        r_pkg.schemas = ARRAY[a_schema]; -- save schema in log
+      END IF;
+    END IF;
+    CASE a_op
+      WHEN 'create' THEN
+        INSERT INTO poma.pkg (id, code, schemas, log_name, user_name, ssh_client, op) VALUES 
+          (NEXTVAL('poma.pkg_id_seq'), a_code, ARRAY[a_schema], a_log_name, a_user_name, a_ssh_client, a_op)
+          RETURNING * INTO r_pkg
+        ;
         INSERT INTO poma.pkg_log VALUES (r_pkg.*);
       WHEN 'build' THEN
         UPDATE poma.pkg SET
@@ -210,30 +194,42 @@ $_$
         WHERE code = a_code
           RETURNING * INTO r_pkg
         ;
-        IF NOT FOUND AND a_blank IS NULL THEN
-          RAISE EXCEPTION '***************** Package % schema % does not found *****************'
-          , a_code, a_schema
-          ;
-        END IF;
         r_pkg.schemas = ARRAY[a_schema]; -- save schema in log
         INSERT INTO poma.pkg_log VALUES (r_pkg.*);
       WHEN 'drop', 'erase' THEN
-        SELECT INTO v_pkgs
-          array_to_string(array_agg(required_by::TEXT),', ')
-          FROM poma.pkg_required_by 
-          WHERE code = a_code
-        ;
-        IF v_pkgs IS NOT NULL AND a_blank IS NULL THEN
+        IF a_code = 'poma' THEN
+          SELECT INTO v_pkgs
+            array_to_string(array_agg(code::TEXT),', ')
+            FROM poma.pkg
+            WHERE code <> a_code
+          ;
+        ELSE
+          SELECT INTO v_pkgs
+            array_to_string(array_agg(required_by::TEXT),', ')
+            FROM poma.pkg_required_by
+            WHERE code = a_code
+          ;
+        END IF;
+        IF a_op = 'drop' AND a_code = 'poma' THEN
+          RAISE EXCEPTION '***************** Package poma does not support drop, only erase *****************';
+        END IF;
+        IF v_pkgs IS NOT NULL THEN
           RAISE EXCEPTION '***************** Package % is required by others (%) *****************', a_code, v_pkgs;
         END IF;
         PERFORM poma.pkg_references(FALSE, a_code, a_schema);
-        IF (r_pkg IS NULL OR a_schema <> ANY(r_pkg.schemas)) AND a_blank IS NOT NULL THEN RETURN a_blank; END IF;
     END CASE;
     RETURN a_code || '-' || a_op || '.psql';
   END;
 $_$;
 
-/* ------------------------------------------------------------------------- */
+-- ----------------------------------------------------------------------------
+/*
+  Завершение выполнения операции с пакетом
+
+  1. create poma - Зарегистрировать операцию в poma.pkg и poma.pkg_log
+  2. create - активировать зависимости
+  3. erase - удалить зависимости
+*/
 CREATE OR REPLACE FUNCTION pkg_op_after(
   a_op         t_pkg_op
 , a_code       name
@@ -241,6 +237,7 @@ CREATE OR REPLACE FUNCTION pkg_op_after(
 , a_log_name   TEXT
 , a_user_name  TEXT
 , a_ssh_client TEXT
+, a_before     TEXT
 , a_blank      TEXT DEFAULT NULL
 ) RETURNS TEXT VOLATILE LANGUAGE 'plpgsql' AS
 $_$
@@ -257,19 +254,17 @@ $_$
     v_self_default TEXT;
   BEGIN
     r_pkg := poma.pkg(a_code);
+    IF a_before IS NOT DISTINCT FROM a_blank THEN
+      RETURN a_code || '-' || a_op || '.skipped';  -- for logs only
+    END IF;
     CASE a_op
       WHEN 'create' THEN
-        IF r_pkg IS NOT NULL AND a_schema = ANY(r_pkg.schemas) AND a_blank IS NULL THEN
-          RAISE EXCEPTION '***************** Package % schema % installed already at % (%) *****************'
-          , a_code, a_schema, r_pkg.stamp, r_pkg.id
-          ;
-        END IF;
         IF r_pkg IS NULL THEN
+          -- poma only
           INSERT INTO poma.pkg (id, code, schemas, log_name, user_name, ssh_client, op) VALUES 
             (NEXTVAL('poma.pkg_id_seq'), a_code, ARRAY[a_schema], a_log_name, a_user_name, a_ssh_client, a_op)
             RETURNING * INTO r_pkg
           ;
-          r_pkg.schemas = ARRAY[a_schema]; -- save schema in log
           INSERT INTO poma.pkg_log VALUES (r_pkg.*);
         END IF;
         PERFORM poma.pkg_references(TRUE, a_code, a_schema);
@@ -278,42 +273,75 @@ $_$
         INSERT INTO poma.pkg_log (id, code, schemas, log_name, user_name, ssh_client, op)
           VALUES (NEXTVAL('poma.pkg_id_seq'), a_code, ARRAY[a_schema], a_log_name, a_user_name, a_ssh_client, a_op)
         ;
-
-        IF a_op = 'erase' AND a_schema <> 'poma' THEN
+        IF a_op = 'erase' THEN
           DELETE FROM poma.pkg_script_protected  WHERE pkg = a_schema;
           DELETE FROM poma.pkg_default_protected WHERE pkg = a_schema;
           DELETE FROM poma.pkg_fkey_protected    WHERE pkg = a_schema;
           DELETE FROM poma.pkg_fkey_required_by  WHERE required_by = a_schema;
         END IF;
-        DELETE FROM poma.pkg_required_by  WHERE required_by = a_schema;
+        DELETE FROM poma.pkg_required_by         WHERE required_by = a_schema;
         IF r_pkg.schemas = ARRAY[a_schema] THEN
           -- last/single schema
           DELETE FROM poma.pkg WHERE code = a_code;
         ELSE  
           UPDATE poma.pkg SET
-            schemas = poma.array_remove(schemas, a_schema)
+            schemas = array_remove(schemas, a_schema)
             WHERE code = a_code
           ;
         END IF;
-        IF a_schema <> ANY(r_pkg.schemas) AND a_blank IS NOT NULL THEN RETURN a_blank; END IF;
       WHEN 'build' THEN
         NULL;
     END CASE;
-    RETURN a_code || '-' || a_op || '.psql';
+    RETURN a_code || '-' || a_op || '.psql'; -- for logs only
   END;
 $_$;
 
-/* ------------------------------------------------------------------------- */
-CREATE OR REPLACE FUNCTION pkg_require(a_code TEXT) RETURNS TEXT STABLE LANGUAGE 'plpgsql' AS
+-- ----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION pkg_version(a_code NAME, a_version DECIMAL)
+  RETURNS VOID LANGUAGE 'plpgsql' AS
 $_$
-  -- a_code:
-  BEGIN
-    RAISE NOTICE 'TODO: function needs code';
-    RETURN NULL;
-  END
+DECLARE
+  v_ver DECIMAL;
+BEGIN
+  SELECT INTO v_ver version FROM poma.pkg WHERE code = a_code;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Cannot get version of unknown package (%)', a_code;
+  ELSIF v_ver > a_version THEN
+    RAISE EXCEPTION 'Newest lib version (%) loaded already', v_ver;
+  ELSIF v_ver < a_version THEN
+    UPDATE poma.pkg SET version = a_version WHERE code = a_code;
+  END IF;
+END
 $_$;
 
-/* ------------------------------------------------------------------------- */
+-- ----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION pkg_require(a_code NAME, a_require NAME, a_version DECIMAL DEFAULT 0)
+  RETURNS VOID LANGUAGE 'plpgsql' AS
+$_$
+DECLARE
+  v_ver DECIMAL;
+BEGIN
+  SELECT INTO v_ver version FROM poma.pkg WHERE code = a_require;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Required by % package (%) does not exists', a_code, a_require;
+  ELSIF v_ver < a_version THEN
+    RAISE EXCEPTION 'Package (%) requires v% of %, but there is only v%', a_code, a_version, a_require, v_ver;
+  END IF;
+
+  SELECT INTO v_ver version FROM poma.pkg_required_by WHERE required_by = a_code AND code = a_require;
+  IF NOT FOUND THEN
+    INSERT INTO poma.pkg_required_by (code, required_by, version)
+      VALUES (a_require, a_code, a_version)
+    ;
+  ELSIF v_ver < a_version THEN
+    UPDATE poma.pkg_required_by SET version = a_version
+      WHERE code = a_required AND required_by = a_code
+    ;
+  END IF;
+END
+$_$;
+
+-- ----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION patch(
   a_pkg TEXT
 , a_md5 TEXT
@@ -343,7 +371,23 @@ END;
 $_$; -- VOLATILE
 COMMENT ON FUNCTION patch(TEXT,TEXT,TEXT,TEXT,TEXT) IS 'Регистрация скриптов обновления БД';
 
-/* ------------------------------------------------------------------------- */
+-- ----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION test(a_code TEXT) RETURNS TEXT VOLATILE LANGUAGE 'plpgsql' AS
+$_$
+  -- a_code:  сообщение для теста
+  BEGIN
+    -- RAISE WARNING parsed for test output
+    IF a_code IS NULL THEN
+      RAISE WARNING '::';
+    ELSE
+      RAISE WARNING '::%', 't/'||a_code;
+    END IF;
+    -- RETURN saved to .md
+    RETURN a_code;
+  END;
+$_$;
+
+-- ----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION raise_on_errors(errors TEXT) RETURNS void LANGUAGE 'plpgsql' AS
 $_$
 BEGIN
@@ -352,4 +396,3 @@ BEGIN
   END IF;
 END
 $_$;
-
