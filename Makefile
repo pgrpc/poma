@@ -330,6 +330,7 @@ function log() { \
     total=$${data#*TOTAL TESTS:} ; \
     d=$${data#* WARNING:  ::} ; \
     dn=$${data#* NOTICE: } ; \
+    dw=$${data#*: WARNING:  } ; \
     if [[ "$$data" != "$$total" ]] ; then \
       if [[ "$$test_cnt" != "0" ]] ; then \
         tput setaf 2 2>/dev/null ; \
@@ -352,14 +353,16 @@ function log() { \
         tput sgr0 2>/dev/null ;  \
       fi ; \
       [[ "$$d" ]] && echo "#$$d" ; \
-    else \
-      if [[ "$$data" == "$$dn" ]] ; then \
+    elif [[ "$$data" != "$$dw" ]] ; then \
+      tput setaf 3 2>/dev/null ; \
+      echo "$$data" ; \
+      tput sgr0 2>/dev/null ;  \
+    elif [[ "$$data" == "$$dn" ]] ; then \
         tput setaf 1 2>/dev/null ;  \
-        [[ "$$ret" != "0" ]] || echo "not ok $$out" ; \
+        [[ "$$ret" != "0" ]] || echo "not ok $$out ($$data)" ; \
         echo "$$data" >> $${LOGFILE}.err ; \
         echo "$$data" ; \
         ret="1" ; \
-      fi; \
     fi; \
   done ; \
   if [[ $$ret == "0" ]] ; then \
