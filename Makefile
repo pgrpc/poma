@@ -330,41 +330,41 @@ function log() { \
     total=$${data#*TOTAL TESTS:} ; \
     d=$${data#* WARNING:  ::} ; \
     dn=$${data#* NOTICE: } ; \
-	if [[ "$$data" != "$$total" ]] ; then \
-    if [[ "$$test_cnt" != "0" ]] ; then \
-	 tput setaf 2 2>/dev/null ; \
-	 echo "ok $$out" ; \
-	 out=""; \
-	 tput sgr0 2>/dev/null ;  \
-	fi ; \
-	[[ "$$total" == "0" ]] || echo "1..$$total" ; \
-	test_cnt=0; continue ; \
-	fi ; \
+    if [[ "$$data" != "$$total" ]] ; then \
+      if [[ "$$test_cnt" != "0" ]] ; then \
+        tput setaf 2 2>/dev/null ; \
+        echo "ok $$out" ; \
+        out=""; \
+        tput sgr0 2>/dev/null ;  \
+      fi ; \
+      [[ "$$total" == "0" ]] || echo "1..$$total" ; \
+      test_cnt=0; continue ; \
+    fi ; \
     if [[ "$$data" != "$$d" ]] ; then \
-	 filenew=$${data%.sql*} ; \
-     filenew=$${filenew#*psql:} ; \
-     if [[ "$$fileold" != "$$filenew" ]] ; then \
-	  tput setaf 2 2>/dev/null ; \
-      [[ "$$test_cnt" == "0" ]] || echo "ok $$out" ; \
-      test_cnt=$$(($$test_cnt+1)) ; \
-      [[ "$$filenew" ]] && out="$$test_cnt - $${filenew%.macro}.sql" ; \
-      fileold=$$filenew ; \
-	  tput sgr0 2>/dev/null ;  \
-     fi ; \
-     [[ "$$d" ]] && echo "#$$d" ; \
+      filenew=$${data%.sql*} ; \
+      filenew=$${filenew#*psql:} ; \
+      if [[ "$$fileold" != "$$filenew" ]] ; then \
+        tput setaf 2 2>/dev/null ; \
+        [[ "$$test_cnt" == "0" ]] || echo "ok $$out" ; \
+        test_cnt=$$(($$test_cnt+1)) ; \
+        [[ "$$filenew" ]] && out="$$test_cnt - $${filenew%.macro}.sql" ; \
+        fileold=$$filenew ; \
+        tput sgr0 2>/dev/null ;  \
+      fi ; \
+      [[ "$$d" ]] && echo "#$$d" ; \
     else \
-	   if [[ "$$data" == "$$dn" ]] ; then \
+      if [[ "$$data" == "$$dn" ]] ; then \
         tput setaf 1 2>/dev/null ;  \
         [[ "$$ret" != "0" ]] || echo "not ok $$out" ; \
         echo "$$data" >> $${LOGFILE}.err ; \
         echo "$$data" ; \
         ret="1" ; \
-	   fi; \
+      fi; \
     fi; \
   done ; \
   if [[ $$ret == "0" ]] ; then \
-   tput setaf 2 2>/dev/null ; \
-   echo "ok $$out" ; \
+    tput setaf 2 2>/dev/null ; \
+    echo "ok $$out" ; \
   fi; \
   tput sgr0 2>/dev/null ; \
   return $$ret ; \
