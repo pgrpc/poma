@@ -128,4 +128,5 @@ make poma-clean .build/drop.psql POMA_PKG=poma SQL_ROOT=.. MASK="00_*.sql 02_*.s
 
 The MIT License (MIT), see [LICENSE](LICENSE).
 
+Copyright (c) 2010-2018 Tender.Pro team <it@tender.pro>
 Copyright (c) 2018 Aleksei Kovrizhkin <lekovr+poma@gmail.com>

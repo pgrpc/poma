@@ -1,3 +1,7 @@
+#    Copyright (c) 2018 Aleksei Kovrizhkin <lekovr+poma@gmail.com>
+#    Use of this source code is governed by a MIT-style
+#    license that can be found in the LICENSE file.
+
 SHELL         = /bin/bash
 
 # Dependencies
