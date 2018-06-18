@@ -1,7 +1,8 @@
 /*
 
-    Copyright (c) 2010, 2012 Tender.Pro http://tender.pro.
-    [SQL_LICENSE]
+    Copyright (c) 2010-2018 Tender.Pro team <it@tender.pro>
+    Use of this source code is governed by a MIT-style
+    license that can be found in the LICENSE file.
 
     Комментирование объектов БД
 */
