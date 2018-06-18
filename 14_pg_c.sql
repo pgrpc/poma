@@ -497,6 +497,52 @@ $_$;
 SELECT pg_c('f', 'pg_store_proc_descr', 'получить описание аргументов и параметров хранимых процедур в указанной схеме');
 
 /* ------------------------------------------------------------------------- */
+CREATE OR REPLACE FUNCTION pg_comment (
+  a_table text
+, a_comment text default ''
+, a_cols json default null
+) RETURNS TEXT LANGUAGE 'plpgsql' AS
+$_$
+  -- a_table: имя таблицы (схема.таблица)
+  -- a_comment: комментарий таблицы
+  -- a_cols: json хэш комментариев полей вида {field: comment ,..}
+DECLARE 
+  v_ret TEXT;
+  v_c TEXT; -- table comment
+  v_s TEXT; -- columnt comment string
+  r RECORD;
+BEGIN
+  IF a_comment <> '' THEN
+    -- save table comment
+    EXECUTE 'COMMENT ON TABLE ' || a_table || ' IS ' || quote_literal(a_comment);
+  END IF;
+  FOR r IN SELECT * FROM json_each_text(a_cols)
+  LOOP
+    -- save column comment
+    RAISE NOTICE 'comment % with %', r.key, r.value;
+    EXECUTE 'COMMENT ON COLUMN ' || a_table || '.' || r.key || ' IS ' || quote_literal(r.value);
+  END LOOP;
+
+  -- read column comments
+  SELECT INTO v_s
+    string_agg(
+      '"' || attname || '": ' || to_json(COALESCE(col_description(attrelid, attnum), '')) || E'\n'
+      , ',') 
+    FROM pg_catalog.pg_attribute 
+    WHERE attrelid = a_table::regclass 
+      AND attnum > 0 
+      AND NOT attisdropped
+    ;
+  
+  v_c := COALESCE(obj_description(a_table::regclass, 'pg_class'), '');  
+  v_ret := format(E'SELECT poma.pg_comment(\'%s\', %s,\'{\n %s}\');',a_table, quote_literal(v_c), v_s);
+  RETURN v_ret ;
+END
+
+$_$;
+SELECT pg_c('f', 'pg_comment', 'чтение/запись комментариев полей таблицы');
+
+/* ------------------------------------------------------------------------- */
 SELECT 
   pg_c('f', 'pg_cs',                    'Текущая (первая) схема БД в пути поиска', $_$если задан аргумент, он и '.' добавляются к имени схемы$_$)
 , pg_c('f', 'pg_schema_oid',            'получить OID по названию пакета')
