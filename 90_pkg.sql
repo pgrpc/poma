@@ -47,3 +47,11 @@ SELECT poma.test('raise_on_errors'); -- BOT
 */
 SELECT poma.raise_on_errors(''); -- EOT
 --TODO: после подключения pgm/utils можно отработать тест с исключением,- utils.exception_test
+
+-- ----------------------------------------------------------------------------
+SELECT poma.test('pg_store_proc_descr'); -- BOT
+/*
+  Тест описания ф-и pg_store_proc_descr
+*/
+SELECT * FROM poma.pg_store_proc_descr('poma') WHERE name = 'pg_store_proc_descr' ORDER BY name ASC; -- EOT
+-- ----------------------------------------------------------------------------
