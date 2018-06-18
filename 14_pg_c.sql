@@ -3,7 +3,7 @@
     Copyright (c) 2010, 2012 Tender.Pro http://tender.pro.
     [SQL_LICENSE]
 
-    Подсистема комментирования объектов БД
+    Комментирование объектов БД
 */
 
 
@@ -50,7 +50,7 @@ $_$
     v_names    TEXT[];
     v_i        INTEGER;
   BEGIN
-    v_reserved := utils.reserved_args();
+    v_reserved := poma.reserved_args();
     FOR v_i IN 0 .. pg_catalog.array_upper(a_types, 1) LOOP
       CONTINUE WHEN a_pub AND a_names[v_i + 1] = ANY (v_reserved);
       v_names[v_i] := pg_catalog.format_type(a_types[v_i], NULL);
@@ -82,12 +82,12 @@ $_$
   , $2
   , obj_description(p.oid, 'pg_proc')
   , p.prorettype
-  , utils.pg_type_name(p.prorettype)
+  , poma.pg_type_name(p.prorettype)
   , proretset
-  , utils.pg_proargs2str(p.proargnames, p.proargtypes, false) -- proargtypes - only IN arguments
-  , utils.pg_proargs2str(p.proargnames, p.proargtypes, true)
+  , poma.pg_proargs2str(p.proargnames, p.proargtypes, false) -- proargtypes - only IN arguments
+  , poma.pg_proargs2str(p.proargnames, p.proargtypes, true)
     FROM pg_catalog.pg_proc p
-    WHERE p.pronamespace = utils.pg_schema_oid($1)
+    WHERE p.pronamespace = poma.pg_schema_oid($1)
       AND p.proname = $2
   ;
 $_$;
@@ -130,7 +130,7 @@ $_$
 $_$;
 
 /* ------------------------------------------------------------------------- */
-CREATE OR REPLACE FUNCTION pg_view_comments(a_code TEXT) RETURNS SETOF utils.t_pg_view_info VOLATILE LANGUAGE 'plpgsql' AS
+CREATE OR REPLACE FUNCTION pg_view_comments(a_code TEXT) RETURNS SETOF poma.t_pg_view_info VOLATILE LANGUAGE 'plpgsql' AS
 $_$
   -- a_code: имя объекта
   DECLARE
@@ -294,7 +294,7 @@ $_$
                     END IF;
                     -- v_src не содержит точку, значит нет схемы. получить схема.таблица из pg_view_comments_get_tbl
                     IF length(v_src) - length(replace(v_src, v_const_2, '')) <> length(v_const_2) THEN
-                      v_src := utils.pg_view_comments_get_tbl(v_src);
+                      v_src := poma.pg_view_comments_get_tbl(v_src);
                     END IF;
                   END IF;
                   v__debug = v_l || '~' || v_r || '~' || v_tbl || '~' || v_pos::TEXT;
@@ -346,35 +346,35 @@ $_$;
 
 /* ------------------------------------------------------------------------- */
 CREATE OR REPLACE FUNCTION pg_c(
-  a_type utils.t_pg_object
+  a_type poma.t_pg_object
 , a_code name
 , a_text TEXT
 , a_anno TEXT DEFAULT NULL
 ) RETURNS void VOLATILE LANGUAGE 'plpgsql' AS
 $_$
-  -- a_type: тип объекта (из перечисления utils.t_pg_object)
+  -- a_type: тип объекта (из перечисления poma.t_pg_object)
   -- a_code: имя объекта
   -- a_text: комментарий
   -- a_anno: аннотация (не сохраняется, предназначено для размещения описания рядом с кодом)
   DECLARE
     v_code TEXT;
     v_name TEXT;
-    rec    utils.t_pg_proc_info;
+    rec    poma.t_pg_proc_info;
     r_view RECORD;
 
   BEGIN
     -- определить схему объекта, если не задана
     IF split_part(a_code, '.', 2) = '' AND a_type NOT IN ('h')
       OR a_type IN ('c','a') AND split_part(a_code, '.', 3) = '' THEN
-      v_code := utils.pg_cs(a_code); -- добавить имя текущей схемы
+      v_code := poma.pg_cs(a_code); -- добавить имя текущей схемы
     ELSE
       v_code := a_code;
     END IF;
 
     IF a_type = 'v' THEN
-      FOR r_view in select * from utils.pg_view_comments(v_code) LOOP
+      FOR r_view in select * from poma.pg_view_comments(v_code) LOOP
         IF r_view.status_id = 1 THEN
-          PERFORM utils.pg_c('c', r_view.rel || '.' || r_view.code, r_view.anno);
+          PERFORM poma.pg_c('c', r_view.rel || '.' || r_view.code, r_view.anno);
         END IF;
       END LOOP;
     END IF;
@@ -393,20 +393,18 @@ $_$
     RAISE DEBUG 'COMMENT FOR % %: % (%)', v_name, v_code, a_text, a_anno;
     IF v_name IS NULL THEN
       -- a(rgument)
-      UPDATE utils.dt_part SET anno = a_text
+      UPDATE poma.dt_part SET anno = a_text
         WHERE dt_code = split_part(v_code, '.', 1)||'.'||split_part(v_code, '.', 2)
           AND code = split_part(v_code, '.', 3)
       ;
     ELSIF a_type = 'f' THEN
       -- получить списки аргументов и прописать коммент каждой ф-и с этим именем
-      FOR rec IN SELECT * FROM utils.pg_proc_info(split_part(v_code, '.', 1), split_part(v_code, '.', 2)) LOOP
---        v_name := utils.sprintf(E'COMMENT ON FUNCTION %s(%s) IS \'%s\'', v_code, rec.args, a_text);
+      FOR rec IN SELECT * FROM poma.pg_proc_info(split_part(v_code, '.', 1), split_part(v_code, '.', 2)) LOOP
         v_name := format(E'COMMENT ON FUNCTION %s(%s) IS \'%s\'', v_code, rec.args, a_text);
         EXECUTE v_name;
         RAISE DEBUG '%', v_name;
       END LOOP;
     ELSE
---      EXECUTE utils.sprintf(E'COMMENT ON %s %s IS \'%s\'', v_name, v_code, a_text);
       EXECUTE format(E'COMMENT ON %s %s IS \'%s\'', v_name, v_code, a_text);
     END IF;
   END;
@@ -443,7 +441,7 @@ $_$
     , pd.description
     , (
         SELECT array_to_json( (
-          SELECT array_agg(DISTINCT ROW(T.elem)::utils.t_textarr) ) ) 
+          SELECT array_agg(DISTINCT ROW(T.elem)::poma.t_textarr) ) ) 
           FROM (
             SELECT ARRAY[a, b/*, row_number() over()*/]::TEXT[] as elem --порядковый номер аргумента отключен
             FROM (
@@ -452,7 +450,7 @@ $_$
                     SELECT array_agg( J.type_name)
                     FROM ( 
                       SELECT ( 
-                        SELECT utils.pg_type_name(T.type) 
+                        SELECT poma.pg_type_name(T.type) 
                       ) as type_name 
                       FROM (
                         SELECT UNNEST(p.proargtypes) as type
@@ -466,7 +464,7 @@ $_$
         CASE WHEN p.proretset
         THEN (
           SELECT array_to_json( (
-            SELECT array_agg(DISTINCT ROW(T.elem)::utils.t_textarr) ) )
+            SELECT array_agg(DISTINCT ROW(T.elem)::poma.t_textarr) ) )
             FROM (
               SELECT ARRAY[a, b/*, ( row_number() over() ) - pronargs*/]::TEXT[] as elem  --порядковый номер аргумента отключен
               FROM (
@@ -475,7 +473,7 @@ $_$
                       SELECT array_agg(J.type_name)
                         FROM (
                           SELECT ( 
-                            SELECT utils.pg_type_name(T.type) 
+                            SELECT poma.pg_type_name(T.type) 
                           ) as type_name 
                           FROM (
                             SELECT UNNEST(p.proallargtypes) as type
