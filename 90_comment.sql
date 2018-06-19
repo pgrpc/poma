@@ -76,6 +76,20 @@ ORDER BY attname ASC; --EOT
 -- ----------------------------------------------------------------------------
 
 -- ----------------------------------------------------------------------------
+SELECT poma.test('comment_type'); -- BOT
+/*
+  Тест comment type
+*/
+SELECT poma.comment('T','poma.t_pg_proc_info','Информация о функции'); --EOT
+SELECT n.nspname as "Schema",
+  pg_catalog.format_type(t.oid, NULL) AS "Name",
+  pg_catalog.obj_description(t.oid, 'pg_type') as "Description"
+FROM pg_catalog.pg_type t
+     LEFT JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
+WHERE n.nspname = 'poma' AND pg_catalog.format_type(t.oid, NULL) ='t_pg_proc_info'; --EOT
+-- ----------------------------------------------------------------------------
+
+-- ----------------------------------------------------------------------------
 SELECT poma.test('comment_function'); -- BOT
 \set QUIET on
 create or replace function poma.test_arg() returns void language sql as
@@ -123,7 +137,7 @@ where nspname='poma' and relname='pkg';
 *      WHEN a_type = 'n' THEN 'SCHEMA'
 *      WHEN a_type = 't' THEN 'TABLE'
 *      WHEN a_type = 'v' THEN 'VIEW'
-      WHEN a_type = 'c' THEN 'COLUMN'
+*      WHEN a_type = 'c' THEN 'COLUMN'
       WHEN a_type = 'T' THEN 'TYPE'
       WHEN a_type = 'D' THEN 'DOMAIN'
 *      WHEN a_type = 'f' THEN 'FUNCTION'
@@ -133,19 +147,12 @@ where nspname='poma' and relname='pkg';
 /*
 -- type
 set local search_path = poma,public;
-SELECT comment('T','t_pg_proc_info','type comm'
+SELECT poma.comment('T','poma.t_pg_proc_info','Информация о функции');
 ,	'schema', 's anno'
 , 'name',   'n anno'
 , 'rt_oid', 'o_anno'
 );
 \dT+ poma.t_pg_proc_info
 \d+ poma.t_pg_proc_info
-
--- current schema
-SELECT comment('n',NULL,'current=ok');
--- named schema
-SELECT comment('n','rpc','rpc=ok');
-\dn+
-
 
 */

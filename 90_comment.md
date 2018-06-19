@@ -140,6 +140,32 @@ ORDER BY attname ASC
 
 ```sql
 /*
+  Тест comment type
+*/
+SELECT poma.comment('T','poma.t_pg_proc_info','Информация о функции')
+;
+```
+|comment 
+|--------
+|
+
+```sql
+SELECT n.nspname as "Schema",
+  pg_catalog.format_type(t.oid, NULL) AS "Name",
+  pg_catalog.obj_description(t.oid, 'pg_type') as "Description"
+FROM pg_catalog.pg_type t
+     LEFT JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
+WHERE n.nspname = 'poma' AND pg_catalog.format_type(t.oid, NULL) ='t_pg_proc_info'
+;
+```
+|Schema |      Name      |     Description      
+|-------|----------------|----------------------
+|poma   | t_pg_proc_info | Информация о функции
+
+## poma/90_comment
+
+```sql
+/*
   Test comment function
 */
 
