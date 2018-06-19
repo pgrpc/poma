@@ -62,6 +62,20 @@ ORDER BY attname ASC; --EOT
 -- ----------------------------------------------------------------------------
 
 -- ----------------------------------------------------------------------------
+SELECT poma.test('comment_column'); -- BOT
+/*
+  Тест comment column
+*/
+SELECT poma.comment('c', 'poma.pkg.id', 'Тест. Изменение наименования column id'); --EOT
+SELECT nspname, relname, attname, format_type(atttypid, atttypmod), obj_description(c.oid), col_description(c.oid, a.attnum) 
+FROM pg_class c 
+JOIN pg_attribute a ON (a.attrelid = c.oid) 
+JOIN pg_namespace n ON (n.oid = c.relnamespace)
+WHERE nspname='poma' AND relname='pkg' AND attname='id'
+ORDER BY attname ASC; --EOT
+-- ----------------------------------------------------------------------------
+
+-- ----------------------------------------------------------------------------
 SELECT poma.test('comment_function'); -- BOT
 \set QUIET on
 create or replace function poma.test_arg() returns void language sql as
@@ -108,7 +122,7 @@ where nspname='poma' and relname='pkg';
 /*
 *      WHEN a_type = 'n' THEN 'SCHEMA'
 *      WHEN a_type = 't' THEN 'TABLE'
-      WHEN a_type = 'v' THEN 'VIEW'
+*      WHEN a_type = 'v' THEN 'VIEW'
       WHEN a_type = 'c' THEN 'COLUMN'
       WHEN a_type = 'T' THEN 'TYPE'
       WHEN a_type = 'D' THEN 'DOMAIN'
