@@ -2,13 +2,10 @@
 ## poma/90_comment
 
 ```sql
-/*
-  Тест pkg_op_before
-*/
-SELECT poma.comment('n','poma','Postgresql projects Makefile')
+SELECT (CASE WHEN (select obj_description(to_regnamespace('poma'))) = 'Postgresql projects Makefile' THEN TRUE ELSE FALSE END) AS is_set_comment
 ;
 ```
-|comment 
-|--------
-|
+|is_set_comment 
+|---------------
+|t
 
