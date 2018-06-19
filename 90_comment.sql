@@ -4,11 +4,39 @@
 
 -- ----------------------------------------------------------------------------
 SELECT poma.test('comment_schema'); -- BOT
-SELECT poma.comment('n','poma','Postgresql projects Makefile');
 /*
   Test comment schema
 */
+SELECT poma.comment('n','poma','Postgresql projects Makefile'); --EOT
 SELECT (CASE WHEN (select obj_description(to_regnamespace('poma'))) = 'Postgresql projects Makefile' THEN TRUE ELSE FALSE END) AS is_set_comment;  -- EOT
+-- ----------------------------------------------------------------------------
+
+-- ----------------------------------------------------------------------------
+SELECT poma.test('comment_table'); -- BOT
+/*
+  Тест comment table
+*/
+SELECT poma.comment('t','poma.pkg'
+  ,'Информация о пакетах и схемах'
+  , VARIADIC ARRAY[
+      'id','идентификатор'
+    , 'code','код пакета'
+    , 'schemas','наименование схемы'
+    , 'op','стадия'
+    , 'version','версия'
+    , 'log_name','наименования пользователя'
+    , 'user_name','имя пользователя'
+    , 'ssh_client','ключ'
+    , 'usr','пользователь'
+    , 'ip','ip-адрес'
+    , 'stamp','дата/время создания/изменения'
+  ]); --EOT
+SELECT nspname, relname, attname, format_type(atttypid, atttypmod), obj_description(c.oid), col_description(c.oid, a.attnum) 
+FROM pg_class c 
+JOIN pg_attribute a ON (a.attrelid = c.oid) 
+JOIN pg_namespace n ON (n.oid = c.relnamespace)
+WHERE nspname='poma' AND relname='pkg' AND attname in ('id','code','schemas') 
+ORDER BY attname ASC; --EOT
 -- ----------------------------------------------------------------------------
 
 -- ----------------------------------------------------------------------------
@@ -23,43 +51,34 @@ $_$
  SET CLIENT_MIN_MESSAGES = a; --'INFO';
 $_$;
 \set QUIET off
-
--- вызов коментирования функций
-SELECT poma.comment('f','poma.comment',E'te''st');
-SELECT poma.comment('f','poma.test_arg','all test_arg');
-
 /*
   Test comment function
 */
-SELECT p.proname
-, pg_catalog.pg_get_function_identity_arguments(p.oid)
-, obj_description(p.oid, 'pg_proc')
-  FROM pg_catalog.pg_proc p
- WHERE p.proname IN ('comment','test_arg')
-; -- EOT
--- ----------------------------------------------------------------------------
+-- вызов коментирования функций
+SELECT poma.comment('f','poma.comment',E'te''st'); --EOT
+SELECT poma.comment('f','poma.test_arg','all test_arg'); --EOT
 
--- ----------------------------------------------------------------------------
---SELECT poma.test('comment_table'); -- BOT
-/*
-  Тест comment table
-*/
---SELECT poma.comment('t','poma.pkg','{id,"идентификатор","code","код",schemas,"наименование схемы"}');
---SELECT (CASE WHEN (select obj_description(to_regnamespace('poma'))) = 'Postgresql projects Makefile' THEN TRUE ELSE FALSE END) AS is_set_comment;  -- EOT
+SELECT p.proname
+  , pg_catalog.pg_get_function_identity_arguments(p.oid)
+  , obj_description(p.oid, 'pg_proc')
+FROM pg_catalog.pg_proc p
+WHERE p.proname IN ('comment','test_arg')
+ORDER BY proname, pg_get_function_identity_arguments ASC; -- EOT
 -- ----------------------------------------------------------------------------
 
 /*
 id integer NOT NULL,
   code text NOT NULL,
   schemas name[],
-  op poma.t_pkg_op,
-  version numeric NOT NULL DEFAULT 0,
-  log_name text,
-  user_name text,
-  ssh_client text,
-  usr text DEFAULT "current_user"(),
-  ip inet DEFAULT inet_client_addr(),
-  stamp timestamp without time zone DEFAULT now(),
+  op,
+  version,
+  log_name,
+  user_name,
+  ssh_client,
+  usr,
+  ip,
+  stamp,
+
 select nspname, relname, attname, format_type(atttypid, atttypmod), obj_description(c.oid), col_description(c.oid, a.attnum) 
 from pg_class c join pg_attribute a on (a.attrelid = c.oid) join pg_namespace n on (n.oid = c.relnamespace)
 where nspname='poma' and relname='pkg';
