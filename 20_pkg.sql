@@ -22,6 +22,10 @@ CREATE TABLE pkg_log (
 );
 CREATE SEQUENCE pkg_id_seq;
 ALTER TABLE pkg_log ALTER COLUMN id SET DEFAULT NEXTVAL('pkg_id_seq');
+SELECT poma.comment('t', 'pkg_log', 'Package operations history'
+, 'id',   'Order number'
+, 'code', 'Package code'
+);
 
 /* ------------------------------------------------------------------------- */
 CREATE TABLE pkg (

@@ -85,16 +85,3 @@ SELECT poma.raise_on_errors('')
 |----------------
 |
 
-## poma/90_pkg
-
-```sql
-/*
-  Тест описания ф-и pg_store_proc_descr
-*/
-SELECT * FROM poma.pg_store_proc_descr('poma') WHERE name = 'pg_store_proc_descr' ORDER BY name ASC
-;
-```
-|       name         |                                    comment                                    |         args          |                                  result                                   
-|--------------------|-------------------------------------------------------------------------------|-----------------------|---------------------------------------------------------------------------
-|pg_store_proc_descr | получить описание аргументов и параметров хранимых процедур в указанной схеме | [["a_schema","text"]] | [["args","json"], ["comment","text"], ["name","text"], ["result","json"]]
-
