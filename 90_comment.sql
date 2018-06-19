@@ -35,7 +35,29 @@ SELECT nspname, relname, attname, format_type(atttypid, atttypmod), obj_descript
 FROM pg_class c 
 JOIN pg_attribute a ON (a.attrelid = c.oid) 
 JOIN pg_namespace n ON (n.oid = c.relnamespace)
-WHERE nspname='poma' AND relname='pkg' AND attname in ('id','code','schemas') 
+WHERE nspname='poma' AND relname='pkg'
+ORDER BY attname ASC; --EOT
+-- ----------------------------------------------------------------------------
+
+-- ----------------------------------------------------------------------------
+SELECT poma.test('comment_view'); -- BOT
+CREATE OR REPLACE VIEW poma.test_view_pkg AS 
+ SELECT id, code, schemas FROM poma.pkg;
+/*
+  Тест comment view
+*/
+SELECT poma.comment('v','poma.test_view_pkg'
+  ,'Представление с краткой информацией о пакетах и схемах'
+  , VARIADIC ARRAY[
+      'id','идентификатор'
+    , 'code','код пакета'
+    , 'schemas','наименование схемы'
+  ]); --EOT
+SELECT nspname, relname, attname, format_type(atttypid, atttypmod), obj_description(c.oid), col_description(c.oid, a.attnum) 
+FROM pg_class c 
+JOIN pg_attribute a ON (a.attrelid = c.oid) 
+JOIN pg_namespace n ON (n.oid = c.relnamespace)
+WHERE nspname='poma' AND relname='test_view_pkg'
 ORDER BY attname ASC; --EOT
 -- ----------------------------------------------------------------------------
 
@@ -84,13 +106,13 @@ from pg_class c join pg_attribute a on (a.attrelid = c.oid) join pg_namespace n 
 where nspname='poma' and relname='pkg';
 */
 /*
-      WHEN a_type = 'n' THEN 'SCHEMA'
-      WHEN a_type = 't' THEN 'TABLE'
+*      WHEN a_type = 'n' THEN 'SCHEMA'
+*      WHEN a_type = 't' THEN 'TABLE'
       WHEN a_type = 'v' THEN 'VIEW'
       WHEN a_type = 'c' THEN 'COLUMN'
       WHEN a_type = 'T' THEN 'TYPE'
       WHEN a_type = 'D' THEN 'DOMAIN'
-      WHEN a_type = 'f' THEN 'FUNCTION'
+*      WHEN a_type = 'f' THEN 'FUNCTION'
       WHEN a_type = 's' THEN 'SEQUENCE'
 
 */

@@ -52,15 +52,63 @@ SELECT nspname, relname, attname, format_type(atttypid, atttypmod), obj_descript
 FROM pg_class c 
 JOIN pg_attribute a ON (a.attrelid = c.oid) 
 JOIN pg_namespace n ON (n.oid = c.relnamespace)
-WHERE nspname='poma' AND relname='pkg' AND attname in ('id','code','schemas') 
+WHERE nspname='poma' AND relname='pkg'
 ORDER BY attname ASC
 ;
 ```
-|nspname | relname | attname | format_type |        obj_description        |  col_description   
-|--------|---------|---------|-------------|-------------------------------|--------------------
-|poma    | pkg     | code    | text        | Информация о пакетах и схемах | код пакета
-|poma    | pkg     | id      | integer     | Информация о пакетах и схемах | идентификатор
-|poma    | pkg     | schemas | name[]      | Информация о пакетах и схемах | наименование схемы
+|nspname | relname |  attname   |         format_type         |        obj_description        |        col_description        
+|--------|---------|------------|-----------------------------|-------------------------------|-------------------------------
+|poma    | pkg     | cmax       | cid                         | Информация о пакетах и схемах | 
+|poma    | pkg     | cmin       | cid                         | Информация о пакетах и схемах | 
+|poma    | pkg     | code       | text                        | Информация о пакетах и схемах | код пакета
+|poma    | pkg     | ctid       | tid                         | Информация о пакетах и схемах | 
+|poma    | pkg     | id         | integer                     | Информация о пакетах и схемах | идентификатор
+|poma    | pkg     | ip         | inet                        | Информация о пакетах и схемах | ip-адрес
+|poma    | pkg     | log_name   | text                        | Информация о пакетах и схемах | наименования пользователя
+|poma    | pkg     | op         | t_pkg_op                    | Информация о пакетах и схемах | стадия
+|poma    | pkg     | schemas    | name[]                      | Информация о пакетах и схемах | наименование схемы
+|poma    | pkg     | ssh_client | text                        | Информация о пакетах и схемах | ключ
+|poma    | pkg     | stamp      | timestamp without time zone | Информация о пакетах и схемах | дата/время создания/изменения
+|poma    | pkg     | tableoid   | oid                         | Информация о пакетах и схемах | 
+|poma    | pkg     | user_name  | text                        | Информация о пакетах и схемах | имя пользователя
+|poma    | pkg     | usr        | text                        | Информация о пакетах и схемах | пользователь
+|poma    | pkg     | version    | numeric                     | Информация о пакетах и схемах | версия
+|poma    | pkg     | xmax       | xid                         | Информация о пакетах и схемах | 
+|poma    | pkg     | xmin       | xid                         | Информация о пакетах и схемах | 
+
+## poma/90_comment
+
+```sql
+/*
+  Тест comment view
+*/
+SELECT poma.comment('v','poma.test_view_pkg'
+  ,'Представление с краткой информацией о пакетах и схемах'
+  , VARIADIC ARRAY[
+      'id','идентификатор'
+    , 'code','код пакета'
+    , 'schemas','наименование схемы'
+  ])
+;
+```
+|comment 
+|--------
+|
+
+```sql
+SELECT nspname, relname, attname, format_type(atttypid, atttypmod), obj_description(c.oid), col_description(c.oid, a.attnum) 
+FROM pg_class c 
+JOIN pg_attribute a ON (a.attrelid = c.oid) 
+JOIN pg_namespace n ON (n.oid = c.relnamespace)
+WHERE nspname='poma' AND relname='test_view_pkg'
+ORDER BY attname ASC
+;
+```
+|nspname |    relname    | attname | format_type |                    obj_description                     |  col_description   
+|--------|---------------|---------|-------------|--------------------------------------------------------|--------------------
+|poma    | test_view_pkg | code    | text        | Представление с краткой информацией о пакетах и схемах | код пакета
+|poma    | test_view_pkg | id      | integer     | Представление с краткой информацией о пакетах и схемах | идентификатор
+|poma    | test_view_pkg | schemas | name[]      | Представление с краткой информацией о пакетах и схемах | наименование схемы
 
 ## poma/90_comment
 
