@@ -76,18 +76,60 @@ ORDER BY attname ASC; --EOT
 -- ----------------------------------------------------------------------------
 
 -- ----------------------------------------------------------------------------
-SELECT poma.test('comment_type'); -- BOT
+--SELECT poma.test('comment_type'); -- BOT
 /*
   Тест comment type
 */
-SELECT poma.comment('T','poma.t_pg_proc_info','Информация о функции'); --EOT
+CREATE TYPE poma.tmp_event_class AS ENUM (
+  'create'   -- Создание объекта
+, 'update'   -- Изменение атрибутов объекта (кроме статуса)
+, 'delete'   -- Удаление объекта
+, 'status'   -- Изменение статуса
+, 'read'     -- Чтение данных
+, 'bad_data' -- Ошибка входных данных
+, 'bad_auth' -- Ошибка авторизации
+); --EOT
+/*
+set local search_path = poma,public;
+SELECT poma.comment('T','poma.tmp_event_class','Информация о классе события'
+  , VARIADIC ARRAY[
+      'create', 'Создание объекта'
+    , 'update', 'Изменение атрибутов объекта (кроме статуса)'
+    , 'delete', 'Удаление объекта'
+    , 'status', 'Изменение статуса'
+    , 'read', 'Чтение данных'
+    , 'bad_data', 'Ошибка входных данных'
+    , 'bad_auth', 'Ошибка авторизации'
+  ]); --EOT
 SELECT n.nspname as "Schema",
   pg_catalog.format_type(t.oid, NULL) AS "Name",
   pg_catalog.obj_description(t.oid, 'pg_type') as "Description"
 FROM pg_catalog.pg_type t
      LEFT JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
-WHERE n.nspname = 'poma' AND pg_catalog.format_type(t.oid, NULL) ='t_pg_proc_info'; --EOT
+WHERE n.nspname = 'poma' AND pg_catalog.format_type(t.oid, NULL) ='poma.tmp_event_class'; --EOT
+*/
+/*
+relation "poma.tmp_event_class" does not exist
+CONTEXT:  SQL statement "SELECT attname
+      FROM pg_catalog.pg_attribute
+     WHERE attrelid = array_to_string(v_names, '.')::regclass
+       AND attnum > 0
+       AND NOT attisdropped"
+PL/pgSQL function poma.comment(character,name,text,text[]) line 97 at FOR over SELECT rows
+*/
+
 -- ----------------------------------------------------------------------------
+
+-- ----------------------------------------------------------------------------
+SELECT poma.test('comment_domain'); -- BOT
+/*
+  Тест comment domain
+*/
+CREATE DOMAIN test_domain AS INTEGER; --EOT
+SELECT poma.comment('D', 'test_domain', 'Тест комментария DOMAIN'); --EOT
+SELECT obj_description(to_regtype('test_domain')); --EOT
+-- ----------------------------------------------------------------------------
+
 
 -- ----------------------------------------------------------------------------
 SELECT poma.test('comment_function'); -- BOT
@@ -138,8 +180,8 @@ where nspname='poma' and relname='pkg';
 *      WHEN a_type = 't' THEN 'TABLE'
 *      WHEN a_type = 'v' THEN 'VIEW'
 *      WHEN a_type = 'c' THEN 'COLUMN'
-      WHEN a_type = 'T' THEN 'TYPE'
-      WHEN a_type = 'D' THEN 'DOMAIN'
+err      WHEN a_type = 'T' THEN 'TYPE'
+*      WHEN a_type = 'D' THEN 'DOMAIN'
 *      WHEN a_type = 'f' THEN 'FUNCTION'
       WHEN a_type = 's' THEN 'SEQUENCE'
 
@@ -155,4 +197,41 @@ SELECT poma.comment('T','poma.t_pg_proc_info','Информация о функ�
 \dT+ poma.t_pg_proc_info
 \d+ poma.t_pg_proc_info
 
+
+---------
+
+create schema if not exists rpc;
+
+create table rpc.vctable1(
+id integer primary key
+, anno text
+);
+
+select poma.comment('t','rpc.vctable1', 'test table'
+--, 'id', 'row id'
+, 'anno', 'row anno'
+);
+
+create view rpc.vcview1 AS
+  select *
+  , current_date AS date
+  from rpc.vctable1
+;
+select poma.comment('v','rpc.vcview1', 'test view1'
+, 'id', 'row id1'
+, 'date', 'cur date'
+);
+
+create view rpc.vcview2 AS
+  select v.id, v.date, t.anno
+  , 1 AS ok
+  from rpc.vcview1 v
+  join rpc.vctable1 t using(id)
+;
+select poma.comment('v','rpc.vcview2', 'test view2'
+, 'ok', 'new filed'
+);
+
+\dv+ rpc.v*
+\d+ rpc.v*
 */

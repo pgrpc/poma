@@ -142,7 +142,28 @@ ORDER BY attname ASC
 /*
   Тест comment type
 */
-SELECT poma.comment('T','poma.t_pg_proc_info','Информация о функции')
+CREATE TYPE poma.tmp_event_class AS ENUM (
+  'create'   
+, 'update'   
+, 'delete'   
+, 'status'   
+, 'read'     
+, 'bad_data' 
+, 'bad_auth' 
+)
+;
+```
+## poma/90_comment
+
+```sql
+/*
+  Тест comment domain
+*/
+CREATE DOMAIN test_domain AS INTEGER
+;
+```
+```sql
+SELECT poma.comment('D', 'test_domain', 'Тест комментария DOMAIN')
 ;
 ```
 |comment 
@@ -150,17 +171,12 @@ SELECT poma.comment('T','poma.t_pg_proc_info','Информация о функ�
 |
 
 ```sql
-SELECT n.nspname as "Schema",
-  pg_catalog.format_type(t.oid, NULL) AS "Name",
-  pg_catalog.obj_description(t.oid, 'pg_type') as "Description"
-FROM pg_catalog.pg_type t
-     LEFT JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
-WHERE n.nspname = 'poma' AND pg_catalog.format_type(t.oid, NULL) ='t_pg_proc_info'
+SELECT obj_description(to_regtype('test_domain'))
 ;
 ```
-|Schema |      Name      |     Description      
-|-------|----------------|----------------------
-|poma   | t_pg_proc_info | Информация о функции
+|    obj_description     
+|------------------------
+|Тест комментария DOMAIN
 
 ## poma/90_comment
 
