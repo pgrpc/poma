@@ -49,9 +49,9 @@ CREATE OR REPLACE VIEW poma.test_view_pkg AS
 SELECT poma.comment('v','poma.test_view_pkg'
   ,'Представление с краткой информацией о пакетах и схемах'
   , VARIADIC ARRAY[
-      'id','идентификатор'
-    , 'code','код пакета'
-    , 'schemas','наименование схемы'
+      'id','идентификатор view'
+    , 'code','код пакета view'
+    , 'schemas','наименование схемы view'
   ]); --EOT
 SELECT nspname, relname, attname, format_type(atttypid, atttypmod), obj_description(c.oid), col_description(c.oid, a.attnum) 
 FROM pg_class c 
@@ -67,6 +67,7 @@ SELECT poma.test('comment_column'); -- BOT
   Тест comment column
 */
 SELECT poma.comment('c', 'poma.pkg.id', 'Тест. Изменение наименования column id'); --EOT
+
 SELECT nspname, relname, attname, format_type(atttypid, atttypmod), obj_description(c.oid), col_description(c.oid, a.attnum) 
 FROM pg_class c 
 JOIN pg_attribute a ON (a.attrelid = c.oid) 
@@ -76,38 +77,24 @@ ORDER BY attname ASC; --EOT
 -- ----------------------------------------------------------------------------
 
 -- ----------------------------------------------------------------------------
---SELECT poma.test('comment_type'); -- BOT
+SELECT poma.test('comment_type'); -- BOT
 /*
   Тест comment type
 */
 CREATE TYPE poma.tmp_event_class AS ENUM (
-  'create'   -- Создание объекта
-, 'update'   -- Изменение атрибутов объекта (кроме статуса)
-, 'delete'   -- Удаление объекта
-, 'status'   -- Изменение статуса
-, 'read'     -- Чтение данных
-, 'bad_data' -- Ошибка входных данных
-, 'bad_auth' -- Ошибка авторизации
+  'create'
+, 'update'
+, 'delete'
+, 'status'
+, 'read'
+, 'bad_data'
+, 'bad_auth'
 ); --EOT
-/*
-set local search_path = poma,public;
-SELECT poma.comment('T','poma.tmp_event_class','Информация о классе события'
-  , VARIADIC ARRAY[
-      'create', 'Создание объекта'
-    , 'update', 'Изменение атрибутов объекта (кроме статуса)'
-    , 'delete', 'Удаление объекта'
-    , 'status', 'Изменение статуса'
-    , 'read', 'Чтение данных'
-    , 'bad_data', 'Ошибка входных данных'
-    , 'bad_auth', 'Ошибка авторизации'
-  ]); --EOT
-SELECT n.nspname as "Schema",
-  pg_catalog.format_type(t.oid, NULL) AS "Name",
-  pg_catalog.obj_description(t.oid, 'pg_type') as "Description"
-FROM pg_catalog.pg_type t
-     LEFT JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
-WHERE n.nspname = 'poma' AND pg_catalog.format_type(t.oid, NULL) ='poma.tmp_event_class'; --EOT
-*/
+-- set local search_path = poma,public;
+SELECT poma.comment('T','poma.tmp_event_class','Информация о классе события'); --EOT
+
+SELECT obj_description(to_regtype('poma.tmp_event_class')); --EOT
+
 /*
 relation "poma.tmp_event_class" does not exist
 CONTEXT:  SQL statement "SELECT attname
@@ -116,6 +103,18 @@ CONTEXT:  SQL statement "SELECT attname
        AND attnum > 0
        AND NOT attisdropped"
 PL/pgSQL function poma.comment(character,name,text,text[]) line 97 at FOR over SELECT rows
+
+
+poma-sample=> SELECT poma.comment('T','poma.tmp_event_class','Информация о классе события');
+ERROR:  relation "poma.tmp_event_class" does not exist
+CONTEXT:  SQL statement "SELECT attname
+      FROM pg_catalog.pg_attribute
+     WHERE attrelid = array_to_string(v_names, '.')::regclass
+       AND attnum > 0
+       AND NOT attisdropped"
+PL/pgSQL function poma.comment(character,name,text,text[]) line 97 at FOR over SELECT rows
+
+
 */
 
 -- ----------------------------------------------------------------------------
@@ -129,7 +128,6 @@ CREATE DOMAIN test_domain AS INTEGER; --EOT
 SELECT poma.comment('D', 'test_domain', 'Тест комментария DOMAIN'); --EOT
 SELECT obj_description(to_regtype('test_domain')); --EOT
 -- ----------------------------------------------------------------------------
-
 
 -- ----------------------------------------------------------------------------
 SELECT poma.test('comment_function'); -- BOT
@@ -194,8 +192,7 @@ where nspname='poma' and relname='pkg';
 err      WHEN a_type = 'T' THEN 'TYPE'
 *      WHEN a_type = 'D' THEN 'DOMAIN'
 *      WHEN a_type = 'f' THEN 'FUNCTION'
-      WHEN a_type = 's' THEN 'SEQUENCE'
-
+*      WHEN a_type = 's' THEN 'SEQUENCE'
 */
 /*
 -- type

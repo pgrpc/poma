@@ -85,9 +85,9 @@ ORDER BY attname ASC
 SELECT poma.comment('v','poma.test_view_pkg'
   ,'Представление с краткой информацией о пакетах и схемах'
   , VARIADIC ARRAY[
-      'id','идентификатор'
-    , 'code','код пакета'
-    , 'schemas','наименование схемы'
+      'id','идентификатор view'
+    , 'code','код пакета view'
+    , 'schemas','наименование схемы view'
   ])
 ;
 ```
@@ -104,11 +104,11 @@ WHERE nspname='poma' AND relname='test_view_pkg'
 ORDER BY attname ASC
 ;
 ```
-|nspname |    relname    | attname | format_type |                    obj_description                     |  col_description   
-|--------|---------------|---------|-------------|--------------------------------------------------------|--------------------
-|poma    | test_view_pkg | code    | text        | Представление с краткой информацией о пакетах и схемах | код пакета
-|poma    | test_view_pkg | id      | integer     | Представление с краткой информацией о пакетах и схемах | идентификатор
-|poma    | test_view_pkg | schemas | name[]      | Представление с краткой информацией о пакетах и схемах | наименование схемы
+|nspname |    relname    | attname | format_type |                    obj_description                     |     col_description     
+|--------|---------------|---------|-------------|--------------------------------------------------------|-------------------------
+|poma    | test_view_pkg | code    | text        | Представление с краткой информацией о пакетах и схемах | код пакета view
+|poma    | test_view_pkg | id      | integer     | Представление с краткой информацией о пакетах и схемах | идентификатор view
+|poma    | test_view_pkg | schemas | name[]      | Представление с краткой информацией о пакетах и схемах | наименование схемы view
 
 ## poma/90_comment
 
@@ -143,16 +143,32 @@ ORDER BY attname ASC
   Тест comment type
 */
 CREATE TYPE poma.tmp_event_class AS ENUM (
-  'create'   
-, 'update'   
-, 'delete'   
-, 'status'   
-, 'read'     
-, 'bad_data' 
-, 'bad_auth' 
+  'create'
+, 'update'
+, 'delete'
+, 'status'
+, 'read'
+, 'bad_data'
+, 'bad_auth'
 )
 ;
 ```
+```sql
+SELECT poma.comment('T','poma.tmp_event_class','Информация о классе события')
+;
+```
+|comment 
+|--------
+|
+
+```sql
+SELECT obj_description(to_regtype('poma.tmp_event_class'))
+;
+```
+|      obj_description       
+|----------------------------
+|Информация о классе события
+
 ## poma/90_comment
 
 ```sql
