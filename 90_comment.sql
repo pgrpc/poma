@@ -158,6 +158,17 @@ WHERE p.proname IN ('comment','test_arg')
 ORDER BY proname, pg_get_function_identity_arguments ASC; -- EOT
 -- ----------------------------------------------------------------------------
 
+-- ----------------------------------------------------------------------------
+SELECT poma.test('comment_sequence'); -- BOT
+/*
+  Тест comment sequence
+*/
+SELECT poma.comment('s', 'pkg_id_seq', 'Тест комментария последовательности pkg_id_seq'); --EOT
+SELECT obj_description('pkg_id_seq'::regclass); --EOT
+-- ----------------------------------------------------------------------------
+
+
+
 /*
 id integer NOT NULL,
   code text NOT NULL,

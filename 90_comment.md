@@ -215,3 +215,24 @@ ORDER BY proname, pg_get_function_identity_arguments ASC
 |test_arg |                                                                          | all test_arg
 |test_arg | a text                                                                   | all test_arg
 
+## poma/90_comment
+
+```sql
+/*
+  Тест comment sequence
+*/
+SELECT poma.comment('s', 'pkg_id_seq', 'Тест комментария последовательности pkg_id_seq')
+;
+```
+|comment 
+|--------
+|
+
+```sql
+SELECT obj_description('pkg_id_seq'::regclass)
+;
+```
+|               obj_description                 
+|-----------------------------------------------
+|Тест комментария последовательности pkg_id_seq
+
