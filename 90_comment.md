@@ -26,21 +26,19 @@ SELECT (CASE WHEN (select obj_description(to_regnamespace('poma'))) = 'Postgresq
 /*
   Тест comment table
 */
-SELECT poma.comment('t','poma.pkg'
-  ,'Информация о пакетах и схемах'
-  , VARIADIC ARRAY[
-      'id','идентификатор'
-    , 'code','код пакета'
-    , 'schemas','наименование схемы'
-    , 'op','стадия'
-    , 'version','версия'
-    , 'log_name','наименования пользователя'
-    , 'user_name','имя пользователя'
-    , 'ssh_client','ключ'
-    , 'usr','пользователь'
-    , 'ip','ip-адрес'
-    , 'stamp','дата/время создания/изменения'
-  ])
+SELECT poma.comment('t','poma.pkg', 'Информация о пакетах и схемах',
+    'id','идентификатор'
+  , 'code','код пакета'
+  , 'schemas','наименование схемы'
+  , 'op','стадия'
+  , 'version','версия'
+  , 'log_name','наименования пользователя'
+  , 'user_name','имя пользователя'
+  , 'ssh_client','ключ'
+  , 'usr','пользователь'
+  , 'ip','ip-адрес'
+  , 'stamp','дата/время создания/изменения'
+)
 ;
 ```
 |comment 
@@ -53,15 +51,13 @@ FROM pg_class c
 JOIN pg_attribute a ON (a.attrelid = c.oid) 
 JOIN pg_namespace n ON (n.oid = c.relnamespace)
 WHERE nspname='poma' AND relname='pkg'
+AND attnum > 0
 ORDER BY attname ASC
 ;
 ```
 |nspname | relname |  attname   |         format_type         |        obj_description        |        col_description        
 |--------|---------|------------|-----------------------------|-------------------------------|-------------------------------
-|poma    | pkg     | cmax       | cid                         | Информация о пакетах и схемах | 
-|poma    | pkg     | cmin       | cid                         | Информация о пакетах и схемах | 
 |poma    | pkg     | code       | text                        | Информация о пакетах и схемах | код пакета
-|poma    | pkg     | ctid       | tid                         | Информация о пакетах и схемах | 
 |poma    | pkg     | id         | integer                     | Информация о пакетах и схемах | идентификатор
 |poma    | pkg     | ip         | inet                        | Информация о пакетах и схемах | ip-адрес
 |poma    | pkg     | log_name   | text                        | Информация о пакетах и схемах | наименования пользователя
@@ -69,12 +65,9 @@ ORDER BY attname ASC
 |poma    | pkg     | schemas    | name[]                      | Информация о пакетах и схемах | наименование схемы
 |poma    | pkg     | ssh_client | text                        | Информация о пакетах и схемах | ключ
 |poma    | pkg     | stamp      | timestamp without time zone | Информация о пакетах и схемах | дата/время создания/изменения
-|poma    | pkg     | tableoid   | oid                         | Информация о пакетах и схемах | 
 |poma    | pkg     | user_name  | text                        | Информация о пакетах и схемах | имя пользователя
 |poma    | pkg     | usr        | text                        | Информация о пакетах и схемах | пользователь
 |poma    | pkg     | version    | numeric                     | Информация о пакетах и схемах | версия
-|poma    | pkg     | xmax       | xid                         | Информация о пакетах и схемах | 
-|poma    | pkg     | xmin       | xid                         | Информация о пакетах и схемах | 
 
 ## poma/90_comment
 
@@ -109,6 +102,97 @@ ORDER BY attname ASC
 |poma    | test_view_pkg | code    | text        | Представление с краткой информацией о пакетах и схемах | код пакета view
 |poma    | test_view_pkg | id      | integer     | Представление с краткой информацией о пакетах и схемах | идентификатор view
 |poma    | test_view_pkg | schemas | name[]      | Представление с краткой информацией о пакетах и схемах | наименование схемы view
+
+## poma/90_comment
+
+```sql
+create table poma.vctable1(
+id integer primary key
+, anno text
+)
+;
+```
+```sql
+select poma.comment('t','poma.vctable1', 'test table'
+, 'anno', 'row anno'
+)
+;
+```
+|comment 
+|--------
+|
+
+```sql
+create view poma.vcview1 AS
+  select *
+  , current_date AS date
+  from poma.vctable1
+;
+```
+```sql
+select poma.comment('v','poma.vcview1', 'test view1'
+, 'id', 'row id1'
+, 'date', 'cur date'
+)
+;
+```
+|comment 
+|--------
+|
+
+```sql
+SELECT nspname, relname, attname, format_type(atttypid, atttypmod), obj_description(c.oid), col_description(c.oid, a.attnum)
+FROM pg_class c 
+JOIN pg_attribute a ON (a.attrelid = c.oid) 
+JOIN pg_namespace n ON (n.oid = c.relnamespace)
+WHERE nspname='poma' AND relname IN('vctable1', 'vcview1')
+AND attnum > 0
+ORDER BY relname, attname ASC
+;
+```
+|nspname | relname  | attname | format_type | obj_description | col_description 
+|--------|----------|---------|-------------|-----------------|-----------------
+|poma    | vctable1 | anno    | text        | test table      | row anno
+|poma    | vctable1 | id      | integer     | test table      | 
+|poma    | vcview1  | anno    | text        | test view1      | row anno
+|poma    | vcview1  | date    | date        | test view1      | cur date
+|poma    | vcview1  | id      | integer     | test view1      | row id1
+
+## poma/90_comment
+
+```sql
+CREATE VIEW poma.vcview2 AS
+  SELECT v.id, v.date, t.anno
+  , 1 AS ok
+  FROM poma.vcview1 v
+  JOIN poma.vctable1 t using(id)
+;
+```
+```sql
+SELECT poma.comment('v','poma.vcview2', 'test view2'
+, 'ok', 'new filed'
+)
+;
+```
+|comment 
+|--------
+|
+
+```sql
+SELECT nspname, relname, attname, format_type(atttypid, atttypmod), obj_description(c.oid), col_description(c.oid, a.attnum) 
+FROM pg_class c 
+JOIN pg_attribute a ON (a.attrelid = c.oid) 
+JOIN pg_namespace n ON (n.oid = c.relnamespace)
+WHERE nspname='poma' AND relname = 'vcview2'
+ORDER BY attname ASC
+;
+```
+|nspname | relname | attname | format_type | obj_description | col_description 
+|--------|---------|---------|-------------|-----------------|-----------------
+|poma    | vcview2 | anno    | text        | test view2      | row anno
+|poma    | vcview2 | date    | date        | test view2      | cur date
+|poma    | vcview2 | id      | integer     | test view2      | row id1
+|poma    | vcview2 | ok      | integer     | test view2      | new filed
 
 ## poma/90_comment
 

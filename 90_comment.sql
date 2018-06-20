@@ -16,31 +16,30 @@ SELECT poma.test('comment_table'); -- BOT
 /*
   Тест comment table
 */
-SELECT poma.comment('t','poma.pkg'
-  ,'Информация о пакетах и схемах'
-  , VARIADIC ARRAY[
-      'id','идентификатор'
-    , 'code','код пакета'
-    , 'schemas','наименование схемы'
-    , 'op','стадия'
-    , 'version','версия'
-    , 'log_name','наименования пользователя'
-    , 'user_name','имя пользователя'
-    , 'ssh_client','ключ'
-    , 'usr','пользователь'
-    , 'ip','ip-адрес'
-    , 'stamp','дата/время создания/изменения'
-  ]); --EOT
+SELECT poma.comment('t','poma.pkg', 'Информация о пакетах и схемах',
+    'id','идентификатор'
+  , 'code','код пакета'
+  , 'schemas','наименование схемы'
+  , 'op','стадия'
+  , 'version','версия'
+  , 'log_name','наименования пользователя'
+  , 'user_name','имя пользователя'
+  , 'ssh_client','ключ'
+  , 'usr','пользователь'
+  , 'ip','ip-адрес'
+  , 'stamp','дата/время создания/изменения'
+); --EOT
 SELECT nspname, relname, attname, format_type(atttypid, atttypmod), obj_description(c.oid), col_description(c.oid, a.attnum) 
 FROM pg_class c 
 JOIN pg_attribute a ON (a.attrelid = c.oid) 
 JOIN pg_namespace n ON (n.oid = c.relnamespace)
 WHERE nspname='poma' AND relname='pkg'
+AND attnum > 0
 ORDER BY attname ASC; --EOT
 -- ----------------------------------------------------------------------------
 
 -- ----------------------------------------------------------------------------
-SELECT poma.test('comment_view'); -- BOT
+SELECT poma.test('comment_view1'); -- BOT
 CREATE OR REPLACE VIEW poma.test_view_pkg AS 
  SELECT id, code, schemas FROM poma.pkg;
 /*
@@ -58,6 +57,51 @@ FROM pg_class c
 JOIN pg_attribute a ON (a.attrelid = c.oid) 
 JOIN pg_namespace n ON (n.oid = c.relnamespace)
 WHERE nspname='poma' AND relname='test_view_pkg'
+ORDER BY attname ASC; --EOT
+-- ----------------------------------------------------------------------------
+SELECT poma.test('comment_view2'); -- BOT
+create table poma.vctable1(
+id integer primary key
+, anno text
+); -- EOT
+
+select poma.comment('t','poma.vctable1', 'test table'
+, 'anno', 'row anno'
+); --EOT
+
+create view poma.vcview1 AS
+  select *
+  , current_date AS date
+  from poma.vctable1
+; --EOT
+select poma.comment('v','poma.vcview1', 'test view1'
+, 'id', 'row id1'
+, 'date', 'cur date'
+); -- EOT
+SELECT nspname, relname, attname, format_type(atttypid, atttypmod), obj_description(c.oid), col_description(c.oid, a.attnum)
+FROM pg_class c 
+JOIN pg_attribute a ON (a.attrelid = c.oid) 
+JOIN pg_namespace n ON (n.oid = c.relnamespace)
+WHERE nspname='poma' AND relname IN('vctable1', 'vcview1')
+AND attnum > 0
+ORDER BY relname, attname ASC; --EOT
+-- ----------------------------------------------------------------------------
+SELECT poma.test('comment_view3'); -- BOT
+CREATE VIEW poma.vcview2 AS
+  SELECT v.id, v.date, t.anno
+  , 1 AS ok
+  FROM poma.vcview1 v
+  JOIN poma.vctable1 t using(id)
+; -- EOT
+SELECT poma.comment('v','poma.vcview2', 'test view2'
+, 'ok', 'new filed'
+); -- EOT
+
+SELECT nspname, relname, attname, format_type(atttypid, atttypmod), obj_description(c.oid), col_description(c.oid, a.attnum) 
+FROM pg_class c 
+JOIN pg_attribute a ON (a.attrelid = c.oid) 
+JOIN pg_namespace n ON (n.oid = c.relnamespace)
+WHERE nspname='poma' AND relname = 'vcview2'
 ORDER BY attname ASC; --EOT
 -- ----------------------------------------------------------------------------
 
