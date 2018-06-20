@@ -114,12 +114,12 @@ make poma-clean .build/drop.psql POMA_PKG=poma SQL_ROOT=.. MASK="00_*.sql 02_*.s
 
 ## TODO
 
-* [ ] creatif
-* [ ] доработать log()
+* [x] creatif (не пытаться создавать существующий пакет)
+* [x] доработать log()
+* [x] psql в docker
 * [ ] в deps проверять psql
 * [ ] поддержка make v3.81
 * [ ] сделать тест работы make
-* [ ] psql в docker
 * [ ] если awk ничего не поменял - вызвать исходник из sql/
 * [ ] `make update` - если пакета нет, create, иначе - build
 * [ ] поддержка go-bindata
