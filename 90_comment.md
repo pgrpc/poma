@@ -222,6 +222,33 @@ ORDER BY attname ASC
 
 ## poma/90_comment
 
+```sql
+/*
+  Тест comment type enum
+*/
+CREATE TYPE poma.tmp_event_class AS ENUM (
+  'create'
+, 'update'
+, 'delete'
+)
+;
+```
+```sql
+SELECT poma.comment('E','poma.tmp_event_class','Комментирование типа enum')
+;
+```
+|comment 
+|--------
+|
+
+```sql
+SELECT obj_description(to_regtype('poma.tmp_event_class'))
+;
+```
+|     obj_description      
+|--------------------------
+|Комментирование типа enum
+
 ## poma/90_comment
 
 ```sql

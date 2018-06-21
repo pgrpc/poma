@@ -119,24 +119,18 @@ ORDER BY attname ASC; --EOT
 -- ----------------------------------------------------------------------------
 
 -- ----------------------------------------------------------------------------
---SELECT poma.test('comment_type_enum'); -- BOT
+SELECT poma.test('comment_type_enum'); -- BOT
 /*
   Тест comment type enum
 */
-/*
 CREATE TYPE poma.tmp_event_class AS ENUM (
   'create'
 , 'update'
 , 'delete'
-, 'status'
-, 'read'
-, 'bad_data'
-, 'bad_auth'
 ); --EOT
--- set local search_path = poma,public;
-SELECT poma.comment('T','poma.tmp_event_class','Информация о классе события'); --EOT
+SELECT poma.comment('E','poma.tmp_event_class','Комментирование типа enum'); --EOT
 SELECT obj_description(to_regtype('poma.tmp_event_class')); --EOT
-*/
+
 -- ----------------------------------------------------------------------------
 
 -- ----------------------------------------------------------------------------
