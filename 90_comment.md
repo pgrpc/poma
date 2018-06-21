@@ -222,23 +222,25 @@ ORDER BY attname ASC
 
 ## poma/90_comment
 
+## poma/90_comment
+
 ```sql
 /*
   Тест comment type
 */
-CREATE TYPE poma.tmp_event_class AS ENUM (
-  'create'
-, 'update'
-, 'delete'
-, 'status'
-, 'read'
-, 'bad_data'
-, 'bad_auth'
+CREATE TYPE poma.tmp_errordef AS (
+  field_code TEXT
+, err_code   TEXT
+, err_data   TEXT
 )
 ;
 ```
 ```sql
-SELECT poma.comment('T','poma.tmp_event_class','Информация о классе события')
+SELECT poma.comment('T', 'poma.tmp_errordef', 'Тестовый тип'
+ , 'field_code', 'Код поля с ошибкой'
+ , 'err_code', 'Код ошибки'
+ , 'err_data', 'Данные ошибки'
+)
 ;
 ```
 |comment 
@@ -246,12 +248,19 @@ SELECT poma.comment('T','poma.tmp_event_class','Информация о клас
 |
 
 ```sql
-SELECT obj_description(to_regtype('poma.tmp_event_class'))
+SELECT nspname, relname, attname, format_type(atttypid, atttypmod), obj_description(to_regtype(c.relname)), col_description(c.oid, a.attnum) 
+FROM pg_class c 
+JOIN pg_attribute a ON (a.attrelid = c.oid) 
+JOIN pg_namespace n ON (n.oid = c.relnamespace)
+WHERE nspname='poma' AND relname='tmp_errordef'
+ORDER BY attname ASC
 ;
 ```
-|      obj_description       
-|----------------------------
-|Информация о классе события
+|nspname |   relname    |  attname   | format_type | obj_description |  col_description   
+|--------|--------------|------------|-------------|-----------------|--------------------
+|poma    | tmp_errordef | err_code   | text        | Тестовый тип    | Код ошибки
+|poma    | tmp_errordef | err_data   | text        | Тестовый тип    | Данные ошибки
+|poma    | tmp_errordef | field_code | text        | Тестовый тип    | Код поля с ошибкой
 
 ## poma/90_comment
 

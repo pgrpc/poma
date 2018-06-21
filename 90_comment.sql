@@ -119,10 +119,11 @@ ORDER BY attname ASC; --EOT
 -- ----------------------------------------------------------------------------
 
 -- ----------------------------------------------------------------------------
-SELECT poma.test('comment_type'); -- BOT
+--SELECT poma.test('comment_type_enum'); -- BOT
 /*
-  Тест comment type
+  Тест comment type enum
 */
+/*
 CREATE TYPE poma.tmp_event_class AS ENUM (
   'create'
 , 'update'
@@ -135,6 +136,32 @@ CREATE TYPE poma.tmp_event_class AS ENUM (
 -- set local search_path = poma,public;
 SELECT poma.comment('T','poma.tmp_event_class','Информация о классе события'); --EOT
 SELECT obj_description(to_regtype('poma.tmp_event_class')); --EOT
+*/
+-- ----------------------------------------------------------------------------
+
+-- ----------------------------------------------------------------------------
+SELECT poma.test('comment_type'); -- BOT
+/*
+  Тест comment type
+*/
+CREATE TYPE poma.tmp_errordef AS (
+  field_code TEXT
+, err_code   TEXT
+, err_data   TEXT
+); --EOT
+
+SELECT poma.comment('T', 'poma.tmp_errordef', 'Тестовый тип'
+ , 'field_code', 'Код поля с ошибкой'
+ , 'err_code', 'Код ошибки'
+ , 'err_data', 'Данные ошибки'
+); --EOT
+
+SELECT nspname, relname, attname, format_type(atttypid, atttypmod), obj_description(to_regtype(c.relname)), col_description(c.oid, a.attnum) 
+FROM pg_class c 
+JOIN pg_attribute a ON (a.attrelid = c.oid) 
+JOIN pg_namespace n ON (n.oid = c.relnamespace)
+WHERE nspname='poma' AND relname='tmp_errordef'
+ORDER BY attname ASC; --EOT
 -- ----------------------------------------------------------------------------
 
 -- ----------------------------------------------------------------------------
