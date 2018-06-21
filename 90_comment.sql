@@ -66,6 +66,7 @@ id integer primary key
 ); -- EOT
 select poma.comment('t','poma.vctable1', 'test table'
 , 'anno', 'row anno'
+, 'id', 'row id'
 ); --EOT
 
 create view poma.vcview1 AS

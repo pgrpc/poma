@@ -115,6 +115,7 @@ id integer primary key
 ```sql
 select poma.comment('t','poma.vctable1', 'test table'
 , 'anno', 'row anno'
+, 'id', 'row id'
 )
 ;
 ```
@@ -153,7 +154,7 @@ ORDER BY relname, attname ASC
 |nspname | relname  | attname | format_type | obj_description | col_description 
 |--------|----------|---------|-------------|-----------------|-----------------
 |poma    | vctable1 | anno    | text        | test table      | row anno
-|poma    | vctable1 | id      | integer     | test table      | 
+|poma    | vctable1 | id      | integer     | test table      | row id
 |poma    | vcview1  | anno    | text        | test view1      | row anno
 |poma    | vcview1  | date    | date        | test view1      | cur date
 |poma    | vcview1  | id      | integer     | test view1      | row id1
