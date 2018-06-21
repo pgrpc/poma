@@ -34,6 +34,7 @@ $_$
       WHEN a_type = 'v' THEN 'VIEW'
       WHEN a_type = 'c' THEN 'COLUMN'
       WHEN a_type = 'T' THEN 'TYPE'
+      WHEN a_type = 'E' THEN 'TYPE' -- enum type
       WHEN a_type = 'D' THEN 'DOMAIN'
       WHEN a_type = 'f' THEN 'FUNCTION'
       WHEN a_type = 's' THEN 'SEQUENCE'
@@ -79,7 +80,7 @@ $_$
       RAISE DEBUG '%', v_sql;
       EXECUTE v_sql;
     END IF;
-    IF v_object NOT IN ('TABLE', 'VIEW') THEN -- TODO: foreign table
+    IF v_object NOT IN ('TABLE', 'VIEW', 'TYPE') OR a_type = 'E' THEN -- TODO: foreign table
       RETURN;
     END IF;
 
