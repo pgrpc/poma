@@ -79,11 +79,9 @@ $_$
       RAISE DEBUG '%', v_sql;
       EXECUTE v_sql;
     END IF;
-    IF v_object NOT IN ('TABLE', 'VIEW', 'TYPE') THEN -- TODO: foreign table
+    IF v_object NOT IN ('TABLE', 'VIEW') THEN -- TODO: foreign table
       RETURN;
     END IF;
-
-    IF v_object = 'TYPE' THEN RETURN; END IF;
 
     -- composite type
     RAISE DEBUG 'READY TO COMMENT COLUMNS';
