@@ -23,8 +23,17 @@ CREATE TABLE pkg_log (
 CREATE SEQUENCE pkg_id_seq;
 ALTER TABLE pkg_log ALTER COLUMN id SET DEFAULT NEXTVAL('pkg_id_seq');
 SELECT poma.comment('t', 'pkg_log', 'Package operations history'
-, 'id',   'Order number'
-, 'code', 'Package code'
+, 'id',         'Order number'
+, 'code',       'Package code'
+, 'schemas',    'List of schemes created by the package'
+, 'op',         'Code for the last operation (create, build, drop, erase, done)'
+, 'version',    'Package version'
+, 'log_name',   '$LOGNAME from the users session in the OS'
+, 'user_name',  '$USERNAME from the users session in the OS'
+, 'ssh_client', '$SSH_CLIENT from the users session in the OS'
+, 'usr',        'User name from database connection'
+, 'ip',         'User IP from database connection'
+, 'stamp',      'The timing of the change'
 );
 
 /* ------------------------------------------------------------------------- */
