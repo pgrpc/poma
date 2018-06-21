@@ -83,6 +83,8 @@ $_$
       RETURN;
     END IF;
 
+    IF v_object = 'TYPE' THEN RETURN; END IF;
+
     -- composite type
     RAISE DEBUG 'READY TO COMMENT COLUMNS';
 
