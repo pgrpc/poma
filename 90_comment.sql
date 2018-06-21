@@ -64,7 +64,6 @@ create table poma.vctable1(
 id integer primary key
 , anno text
 ); -- EOT
-
 select poma.comment('t','poma.vctable1', 'test table'
 , 'anno', 'row anno'
 ); --EOT
@@ -111,7 +110,6 @@ SELECT poma.test('comment_column'); -- BOT
   Тест comment column
 */
 SELECT poma.comment('c', 'poma.pkg.id', 'Тест. Изменение наименования column id'); --EOT
-
 SELECT nspname, relname, attname, format_type(atttypid, atttypmod), obj_description(c.oid), col_description(c.oid, a.attnum) 
 FROM pg_class c 
 JOIN pg_attribute a ON (a.attrelid = c.oid) 
@@ -136,31 +134,7 @@ CREATE TYPE poma.tmp_event_class AS ENUM (
 ); --EOT
 -- set local search_path = poma,public;
 SELECT poma.comment('T','poma.tmp_event_class','Информация о классе события'); --EOT
-
 SELECT obj_description(to_regtype('poma.tmp_event_class')); --EOT
-
-/*
-relation "poma.tmp_event_class" does not exist
-CONTEXT:  SQL statement "SELECT attname
-      FROM pg_catalog.pg_attribute
-     WHERE attrelid = array_to_string(v_names, '.')::regclass
-       AND attnum > 0
-       AND NOT attisdropped"
-PL/pgSQL function poma.comment(character,name,text,text[]) line 97 at FOR over SELECT rows
-
-
-poma-sample=> SELECT poma.comment('T','poma.tmp_event_class','Информация о классе события');
-ERROR:  relation "poma.tmp_event_class" does not exist
-CONTEXT:  SQL statement "SELECT attname
-      FROM pg_catalog.pg_attribute
-     WHERE attrelid = array_to_string(v_names, '.')::regclass
-       AND attnum > 0
-       AND NOT attisdropped"
-PL/pgSQL function poma.comment(character,name,text,text[]) line 97 at FOR over SELECT rows
-
-
-*/
-
 -- ----------------------------------------------------------------------------
 
 -- ----------------------------------------------------------------------------
@@ -208,82 +182,3 @@ SELECT poma.test('comment_sequence'); -- BOT
 SELECT poma.comment('s', 'pkg_id_seq', 'Тест комментария последовательности pkg_id_seq'); --EOT
 SELECT obj_description('pkg_id_seq'::regclass); --EOT
 -- ----------------------------------------------------------------------------
-
-
-
-/*
-id integer NOT NULL,
-  code text NOT NULL,
-  schemas name[],
-  op,
-  version,
-  log_name,
-  user_name,
-  ssh_client,
-  usr,
-  ip,
-  stamp,
-
-select nspname, relname, attname, format_type(atttypid, atttypmod), obj_description(c.oid), col_description(c.oid, a.attnum) 
-from pg_class c join pg_attribute a on (a.attrelid = c.oid) join pg_namespace n on (n.oid = c.relnamespace)
-where nspname='poma' and relname='pkg';
-*/
-/*
-*      WHEN a_type = 'n' THEN 'SCHEMA'
-*      WHEN a_type = 't' THEN 'TABLE'
-*      WHEN a_type = 'v' THEN 'VIEW'
-*      WHEN a_type = 'c' THEN 'COLUMN'
-err      WHEN a_type = 'T' THEN 'TYPE'
-*      WHEN a_type = 'D' THEN 'DOMAIN'
-*      WHEN a_type = 'f' THEN 'FUNCTION'
-*      WHEN a_type = 's' THEN 'SEQUENCE'
-*/
-/*
--- type
-set local search_path = poma,public;
-SELECT poma.comment('T','poma.t_pg_proc_info','Информация о функции');
-,	'schema', 's anno'
-, 'name',   'n anno'
-, 'rt_oid', 'o_anno'
-);
-\dT+ poma.t_pg_proc_info
-\d+ poma.t_pg_proc_info
-
-
----------
-
-create schema if not exists rpc;
-
-create table rpc.vctable1(
-id integer primary key
-, anno text
-);
-
-select poma.comment('t','rpc.vctable1', 'test table'
---, 'id', 'row id'
-, 'anno', 'row anno'
-);
-
-create view rpc.vcview1 AS
-  select *
-  , current_date AS date
-  from rpc.vctable1
-;
-select poma.comment('v','rpc.vcview1', 'test view1'
-, 'id', 'row id1'
-, 'date', 'cur date'
-);
-
-create view rpc.vcview2 AS
-  select v.id, v.date, t.anno
-  , 1 AS ok
-  from rpc.vcview1 v
-  join rpc.vctable1 t using(id)
-;
-select poma.comment('v','rpc.vcview2', 'test view2'
-, 'ok', 'new filed'
-);
-
-\dv+ rpc.v*
-\d+ rpc.v*
-*/
