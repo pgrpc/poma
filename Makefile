@@ -443,12 +443,12 @@ $(BUILD_DIR)/$(PKG)/%.psql: $(SQL_ROOT)/$(PKG)/%.sql
 		    echo "\\set TESTOUT $$outn.md" >> $$out ; \
 			echo "\\set BUILD_DIR $(BUILD_DIR)/" >> $$out ; \
 		    echo "$$POMA_TEST_BEGIN" >> $$out ; \
-		    $(AWK) '{ gsub(/ *-- *BOT/, "\n\\qecho '\''#  t/'\'':TEST\nSELECT :'\''TEST'\''\n\\set QUIET on\n\\pset t on\n\\g :OUTT\n\\pset t off\n\\set QUIET on"); gsub(/; *-- *EOT/, "\n\\w :OUTW\n\\g :OUTG"); print }' $< >> $$out ; \
+		    $(AWK) '{ gsub(/ *-- *BOT/, "\n\\pset t on\n\\g :OUTT\n\\pset t off\n\\set QUIET on"); gsub(/; *-- *EOT/, "\n\\w :OUTW\n\\g :OUTG"); print }' $< >> $$out ; \
 		    echo "\! diff -c $$innr.md $$outn.md | tr \"\t\" ' ' > $(BUILD_DIR)/errors.diff" >> $$out ; \
 		    echo "$$POMA_TEST_END" >> $$out ; \
 		    echo "\i $$out" > $@ ; \
 			else \
-		    $(AWK) '{ gsub(/ *-- *BOT/, "\n\\qecho '\''#  t/'\'':TEST\nSELECT :'\''TEST'\''\n\\set QUIET on\n\\pset t on\n\\g :OUTT\n\\pset t off\n\\set QUIET on"); gsub(/; *-- *EOT/, "\n\\w :OUTW\n\\g :OUTG"); print }' $< >> $$out ; \
+		    $(AWK) '{ gsub(/ *-- *BOT/, "\n\\pset t on\n\\g :OUTT\n\\pset t off\n\\set QUIET on"); gsub(/; *-- *EOT/, "\n\\w :OUTW\n\\g :OUTG"); print }' $< >> $$out ; \
 		    echo "\i $$out" > $@ ; \
 			fi ;; \
 		*) \

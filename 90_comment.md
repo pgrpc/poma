@@ -1,5 +1,5 @@
 #  poma/90_comment
-## poma/90_comment
+## comment_schema
 
 ```sql
 /*
@@ -20,7 +20,7 @@ SELECT (CASE WHEN (select obj_description(to_regnamespace('poma'))) = 'Postgresq
 |---------------
 |t
 
-## poma/90_comment
+## comment_table
 
 ```sql
 /*
@@ -69,7 +69,7 @@ ORDER BY attname ASC
 |poma    | pkg     | usr        | text                        | Информация о пакетах и схемах | пользователь
 |poma    | pkg     | version    | numeric                     | Информация о пакетах и схемах | версия
 
-## poma/90_comment
+## comment_view1
 
 ```sql
 /*
@@ -103,7 +103,7 @@ ORDER BY attname ASC
 |poma    | test_view_pkg | id      | integer     | Представление с краткой информацией о пакетах и схемах | идентификатор view
 |poma    | test_view_pkg | schemas | name[]      | Представление с краткой информацией о пакетах и схемах | наименование схемы view
 
-## poma/90_comment
+## comment_view2
 
 ```sql
 create table poma.vctable1(
@@ -159,7 +159,7 @@ ORDER BY relname, attname ASC
 |poma    | vcview1  | date    | date        | test view1      | cur date
 |poma    | vcview1  | id      | integer     | test view1      | row id1
 
-## poma/90_comment
+## comment_view3
 
 ```sql
 CREATE VIEW poma.vcview2 AS
@@ -195,7 +195,7 @@ ORDER BY attname ASC
 |poma    | vcview2 | id      | integer     | test view2      | row id1
 |poma    | vcview2 | ok      | integer     | test view2      | new filed
 
-## poma/90_comment
+## comment_column
 
 ```sql
 /*
@@ -221,7 +221,7 @@ ORDER BY attname ASC
 |--------|---------|---------|-------------|-------------------------------|----------------------------------------
 |poma    | pkg     | id      | integer     | Информация о пакетах и схемах | Тест. Изменение наименования column id
 
-## poma/90_comment
+## comment_type_enum
 
 ```sql
 /*
@@ -250,7 +250,7 @@ SELECT obj_description(to_regtype('poma.tmp_event_class'))
 |--------------------------
 |Комментирование типа enum
 
-## poma/90_comment
+## comment_type
 
 ```sql
 /*
@@ -290,7 +290,7 @@ ORDER BY attname ASC
 |poma    | tmp_errordef | err_data   | text        | Тестовый тип    | Данные ошибки
 |poma    | tmp_errordef | field_code | text        | Тестовый тип    | Код поля с ошибкой
 
-## poma/90_comment
+## comment_domain
 
 ```sql
 /*
@@ -315,7 +315,7 @@ SELECT obj_description(to_regtype('test_domain'))
 |------------------------
 |Тест комментария DOMAIN
 
-## poma/90_comment
+## comment_function
 
 ```sql
 /*
@@ -352,7 +352,7 @@ ORDER BY proname, pg_get_function_identity_arguments ASC
 |test_arg |                                                                          | all test_arg
 |test_arg | a text                                                                   | all test_arg
 
-## poma/90_comment
+## comment_sequence
 
 ```sql
 /*
