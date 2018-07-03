@@ -1,5 +1,5 @@
 #  poma/90_pkg
-## poma/90_pkg
+## pkg_op_before
 
 ```sql
 /*
@@ -12,7 +12,7 @@ SELECT poma.pkg_op_before('create', 'test_poma', 'test_poma', '', '', '', 'blank
 |----------------------
 |test_poma-create.psql
 
-## poma/90_pkg
+## pkg_op_after
 
 ```sql
 /*
@@ -25,7 +25,7 @@ SELECT poma.pkg_op_after('create', 'test_poma', 'test_poma', '', '', '', 'noskip
 |----------------------
 |test_poma-create.psql
 
-## poma/90_pkg
+## pkg
 
 ```sql
 /*
@@ -38,7 +38,7 @@ SELECT code, schemas, op FROM poma.pkg('test_poma')
 |----------|-------------|------
 |test_poma | {test_poma} | done
 
-## poma/90_pkg
+## pkg_with_non_existent_schema
 
 ```sql
 /*
@@ -51,7 +51,7 @@ SELECT count(1) FROM poma.pkg('non_existent_schema')
 |------
 |    0
 
-## poma/90_pkg
+## patch
 
 ```sql
 /*
@@ -72,7 +72,7 @@ SELECT poma.patch('poma_test','a83084dc0332dbc4d1f7a6c7dc7b4993','sql/poma_test/
 |----------------------
 |.build/empty_test.sql
 
-## poma/90_pkg
+## raise_on_errors
 
 ```sql
 /*
