@@ -36,6 +36,9 @@ PGPORT       ?= 5432
 PGSSLMODE    ?= disable
 PGPASSWORD   ?= $(shell < /dev/urandom tr -dc A-Za-z0-9 | head -c14; echo)
 
+#Stop *once.sql script execution on if this is disable
+RUNONCE      ?=enable
+
 # Database template
 DB_TEMPLATE  ?= template1
 # Database dump for import on create
@@ -431,7 +434,7 @@ $(BUILD_DIR)/$(PKG)/%.psql: $(SQL_ROOT)/$(PKG)/%.sql
 			arg=$$("$(MD5SUM)" $$in | sed -E "s/ +/','/") ; \
 			echo "select poma.patch('$(PKG)','$$arg','$(SQL_ROOT)/$(PKG)/','$(SQL_EMPTY)')" >> $$out ; \
 			echo "\gset" >> $$out ; \
-			echo "\i :patch" >> $$out ; \
+			if [[ "$(RUNONCE)" != "disable" ]] ; then echo "\i :patch" >> $$out ; fi ; \
 			echo "\i $$out" > $@ ; \
 		    else \
 			echo "\i $<" > $@ ; \
