@@ -59,7 +59,7 @@ LOGFILE      ?= $(BUILD_DIR)/build.log
 
 # SQL files mask
 MASK_CREATE  ?= [1-9]?_*.sql
-MASK_BUILD   ?= 1[4-9]_*.sql [3-6,9]?_*.sql [2,8]*_once.sql
+MASK_BUILD   ?= 1[4-9]_*.sql [3-6,9]?_*.sql [2,4,8]*_once.sql
 MASK_TEST    ?= 9?_*.sql
 MASK_DROP    ?= 00_*.sql 02_*.sql
 MASK_ERASE   ?= 0?_*.sql
@@ -425,7 +425,7 @@ $(BUILD_DIR)/$(PKG)/%.psql: $(SQL_ROOT)/$(PKG)/%.sql
 		    $(AWK) '{ print gensub(/(\$$_\$$)($$| +#?)/, "\\1\\2 /* " FILENAME ":" FNR " */ ","g")};' \
 		    $< > $$out || echo "-- dd" >> $out ; \
 		    echo "\i $$out" > $@ ;; \
-		2|8) \
+		2|4|8) \
 		    if [[ "$$inn" != "$${inn%_once}" ]] ; then \
 			echo "\qecho $$inn" > $$out ; \
 			arg=$$("$(MD5SUM)" $$in | sed -E "s/ +/','/") ; \
