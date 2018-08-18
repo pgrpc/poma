@@ -215,15 +215,15 @@ $(SQL_EMPTY):
 # DB operations
 
 # Database import script
-# DB_CONTAINER_DUMP_DEST must be set in pg container
+# DCAPE_DB_DUMP_DEST must be set in pg container
 
 define POMA_IMPORT_SCRIPT
-[[ "$$DB_CONTAINER_DUMP_DEST" ]] || { echo "DB_CONTAINER_DUMP_DEST not set. Exiting" ; exit 1 ; } ; \
+[[ "$$DCAPE_DB_DUMP_DEST" ]] || { echo "DCAPE_DB_DUMP_DEST not set. Exiting" ; exit 1 ; } ; \
 PGDATABASE="$$1" ; PGUSER="$$2" ; PGPASSWORD="$$3" ; DB_SOURCE="$$4" ; \
-dbsrc=$$DB_CONTAINER_DUMP_DEST/$$DB_SOURCE.tgz ; \
+dbsrc=$$DCAPE_DB_DUMP_DEST/$$DB_SOURCE.tgz ; \
 if [ -f $$dbsrc ] ; then \
   echo "Dump file $$dbsrc found, restoring database..." ; \
-  zcat $$dbsrc | pg_restore -h localhost -O -Ft || exit 1 ; \
+  zcat $$dbsrc | PGPASSWORD=$$PGPASSWORD pg_restore -h localhost -O -Ft -U $$PGUSER -d $$PGDATABASE || exit 1 ; \
 else \
   echo "Dump file $$dbsrc not found" ; \
   exit 2 ; \
