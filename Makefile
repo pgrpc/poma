@@ -334,6 +334,7 @@ function log() { \
     d=$${data#* WARNING:  ::} ; \
     dn=$${data#* NOTICE: } ; \
     dw=$${data#*: WARNING:  } ; \
+	ddiff=$${data#*WARNING: DIFERROR } ; \
     if [[ "$$data" != "$$total" ]] ; then \
       if [[ "$$test_cnt" != "0" ]] ; then \
         tput setaf 2 2>/dev/null ; \
@@ -364,7 +365,11 @@ function log() { \
         tput setaf 1 2>/dev/null ;  \
         [[ "$$ret" != "0" ]] || echo "not ok $$out ($$data)" ; \
         echo "$$data" >> $${LOGFILE}.err ; \
-        echo "$$data" ; \
+        if [[ "$$data" != "$$ddiff" ]] ; then \
+		  git diff --no-index --minimal --color=always $$ddiff ; \
+		else \
+	      echo "$$data" ; \
+		fi; \
         ret="1" ; \
     fi; \
   done ; \
@@ -447,7 +452,7 @@ $(BUILD_DIR)/$(PKG)/%.psql: $(SQL_ROOT)/$(PKG)/%.sql
 			echo "\\set BUILD_DIR $(BUILD_DIR)/" >> $$out ; \
 		    echo "$$POMA_TEST_BEGIN" >> $$out ; \
 		    $(AWK) '{ gsub(/; *-- *BOT/, "\n\\pset t on\n\\g :OUTT\n\\pset t off\n\\set QUIET on"); gsub(/; *-- *EOT/, "\n\\w :OUTW\n\\g :OUTG"); print }' $< >> $$out ; \
-		    echo "\! diff -c $$innr.md $$outn.md | tr \"\t\" ' ' > $(BUILD_DIR)/errors.diff" >> $$out ; \
+		    echo "\! diff -c $$innr.md $$outn.md && echo '' > $(BUILD_DIR)/errors.diff || echo 'WARNING: DIFERROR $$innr.md $$outn.md' > $(BUILD_DIR)/errors.diff" >> $$out ; \
 		    echo "$$POMA_TEST_END" >> $$out ; \
 		    echo "\i $$out" > $@ ; \
 			else \
