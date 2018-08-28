@@ -199,7 +199,7 @@ $(BUILD_DIR)/%.psql: $(BUILD_DIR) $(SQL_EMPTY) poma-deps
 	  docker cp sql $$DB_CONTAINER:$$tmp_dir ; \
 	  docker cp .build $$DB_CONTAINER:$$tmp_dir ; \
 	  $(POMA_LOG_PARSER) ; \
-	  docker exec -w $$tmp_dir -e PGPASSWORD=$$PGPASSWORD -i $$DB_CONTAINER psql \
+	  docker exec -e PGPASSWORD=$$PGPASSWORD -i $$DB_CONTAINER bash -c 'cd $$tmp_dir' && psql \
 	    -U $$PGUSER -d $$PGDATABASE --no-psqlrc --single-transaction -v VERBOSITY=terse \
 	    -P footer=off -v ON_ERROR_STOP=1 -f $@ 3>&1 1>$$LOGFILE 2>&3 | log ; \
 	  docker exec -i $$DB_CONTAINER rm -rf $$tmp_dir ; \
