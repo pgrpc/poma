@@ -254,8 +254,8 @@ docker-db-create: .docker-wait
 ## drop database and user, requires docker postgresql container
 docker-db-drop: .docker-wait
 	@echo "*** $@ ***"
-	@docker exec -it $$DB_CONTAINER psql -U postgres -c "DROP DATABASE \"$$PGDATABASE\";" || true
-	@docker exec -it $$DB_CONTAINER psql -U postgres -c "DROP USER \"$$PGUSER\";" || true
+	@docker exec -i $$DB_CONTAINER psql -U postgres -c "DROP DATABASE \"$$PGDATABASE\";" || true
+	@docker exec -i $$DB_CONTAINER psql -U postgres -c "DROP USER \"$$PGUSER\";" || true
 
 poma-clean: rmd-$(BUILD_DIR)
 
