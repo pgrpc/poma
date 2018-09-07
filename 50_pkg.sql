@@ -7,10 +7,10 @@
 */
 
 -- ----------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION pkg(a_code TEXT) RETURNS SETOF pkg STABLE LANGUAGE 'sql' AS
+CREATE OR REPLACE FUNCTION pkg(a_code TEXT, a_schema TEXT DEFAULT NULL) RETURNS SETOF pkg STABLE LANGUAGE 'sql' AS
 $_$
   -- a_code:  пакет
-  SELECT * FROM poma.pkg WHERE code = $1;
+  SELECT * FROM poma.pkg WHERE code = $1 AND (a_schema is NULL OR a_schema = ANY(schemas));
 $_$;
 
 -- ----------------------------------------------------------------------------
@@ -152,8 +152,8 @@ $_$
     v_self_default TEXT;
     v_pkgs         TEXT;
   BEGIN
-    r_pkg := poma.pkg(a_code);
-    IF r_pkg IS NOT NULL AND a_schema = ANY(r_pkg.schemas) THEN
+    SELECT INTO r_pkg * FROM poma.pkg(a_code, a_schema);
+    IF FOUND THEN
       -- pkg already exists
       IF a_op::TEXT = ANY(ARRAY['create']) THEN
         IF a_blank IS NULL THEN
