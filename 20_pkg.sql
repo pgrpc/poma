@@ -5,9 +5,16 @@
 
     Таблицы для компилляции и установки пакетов
 */
-CREATE TYPE t_pkg_op AS ENUM ('create', 'build', 'drop', 'erase', 'done'); 
 -- -----------------------------------------------------------------------------
-CREATE TABLE pkg_log (
+DO $_$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 't_pkg_op') THEN
+    CREATE TYPE t_pkg_op AS ENUM ('create', 'build', 'drop', 'erase', 'done'); 
+  END IF;
+END$_$;
+
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS pkg_log (
   id          INTEGER PRIMARY KEY
 , code        TEXT NOT NULL
 , schemas     name[] NOT NULL
@@ -20,7 +27,7 @@ CREATE TABLE pkg_log (
 , ip          INET DEFAULT inet_client_addr()
 , stamp       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-CREATE SEQUENCE pkg_id_seq;
+CREATE SEQUENCE IF NOT EXISTS pkg_id_seq;
 ALTER TABLE pkg_log ALTER COLUMN id SET DEFAULT NEXTVAL('pkg_id_seq');
 SELECT poma.comment('t', 'pkg_log', 'Package operations history'
 , 'id',         'Order number'
@@ -37,7 +44,7 @@ SELECT poma.comment('t', 'pkg_log', 'Package operations history'
 );
 
 /* ------------------------------------------------------------------------- */
-CREATE TABLE pkg (
+CREATE TABLE IF NOT EXISTS pkg (
   id          INTEGER NOT NULL UNIQUE
 , code        TEXT PRIMARY KEY -- для REFERENCES
 , schemas     name[]
@@ -52,7 +59,7 @@ CREATE TABLE pkg (
 );
 
 /* ------------------------------------------------------------------------- */
-CREATE TABLE pkg_required_by (
+CREATE TABLE IF NOT EXISTS pkg_required_by (
   code        name REFERENCES pkg
 , required_by name DEFAULT current_schema() 
 , version     DECIMAL NOT NULL DEFAULT 0

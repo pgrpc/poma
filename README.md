@@ -39,14 +39,14 @@ poma-sample
 В результате `include sql/poma/Makefile`, основной Makefile проекта будет поддерживать следующие цели:
 
 * `make config` - создать файл настроек (.env) всего проекта
-* `make poma-install` - создать схему poma
+* `make poma-install` - создать схему poma и выполнить рецепт `poma-create-default`
 * `make poma-create[-default]` - первичное создание пакета
 * `make poma-build[-default]` - сборка хранимого кода
 * `make poma-test[-default]` - запуск тестов
 * `make poma-recreate[-default]` - пересоздание пакетов со сборкой кода
 * `make poma-drop[-default]` - удаление пакета
 * `make poma-erase[-default]` - удаление пакета и его персистентных данных
-* `make poma-uninstall` - удалить схему poma, если нет других пакетов
+* `make poma-uninstall` - выполнить рецепт `poma-drop-default` и удалить схему poma (схема pers удалена не будет)
 
 ## SQL filename
 

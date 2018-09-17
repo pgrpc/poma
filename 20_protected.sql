@@ -7,7 +7,7 @@
 */
 
 /* ------------------------------------------------------------------------- */
-CREATE TABLE pkg_script_protected (
+CREATE TABLE IF NOT EXISTS pkg_script_protected (
   pkg         name
 , file        TEXT
 , csum        TEXT NOT NULL
@@ -17,7 +17,7 @@ CREATE TABLE pkg_script_protected (
 
 
 /* ------------------------------------------------------------------------- */
-CREATE TABLE pkg_fkey_protected (
+CREATE TABLE IF NOT EXISTS pkg_fkey_protected (
   pkg         name
 , wsd_rel     name
 , wsd_col     text
@@ -28,7 +28,7 @@ CREATE TABLE pkg_fkey_protected (
 );
 
 /* ------------------------------------------------------------------------- */
-CREATE TABLE pkg_fkey_required_by (
+CREATE TABLE IF NOT EXISTS pkg_fkey_required_by (
   pkg         name 
 , rel         name
 , required_by name
@@ -37,7 +37,7 @@ CREATE TABLE pkg_fkey_required_by (
 -- TODO: В триггере на INSERT проверять, что в wsd.pkg_fkey_protected есть такая пара pkg,rel
 
 /* ------------------------------------------------------------------------- */
-CREATE TABLE pkg_default_protected (
+CREATE TABLE IF NOT EXISTS pkg_default_protected (
   pkg         name
 , wsd_rel     name NOT NULL
 , wsd_col     text NOT NULL

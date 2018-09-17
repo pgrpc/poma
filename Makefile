@@ -80,7 +80,7 @@ else
 endif
 ifeq ($(MD5SUM),)
 ifeq ($(MD5),)
-	$(error "gawk is not available, please install it")
+	$(error "md5sum is not available, please install it")
 else
 	@#echo "$(MD5) found."
 	MD5SUM = $(MD5) -r
@@ -137,11 +137,13 @@ poma-erase-%: MASK = $(MASK_ERASE)
 poma-erase-%: $(BUILD_DIR)/erase.psql
 	@echo "** $@ ** "
 
-poma-install: POMA_PKG=poma
-poma-install: poma-create-poma
+poma-install:
+	$(MAKE) -s poma-create-poma POMA_PKG=poma
+	$(MAKE) -s poma-create-default
 
-poma-uninstall: POMA_PKG=poma
-poma-uninstall: poma-erase-poma
+poma-uninstall:
+	$(MAKE) -s poma-drop-default
+	$(MAKE) -s poma-erase-poma POMA_PKG=poma
 
 
 # https://stackoverflow.com/a/786530
