@@ -97,12 +97,12 @@ SELECT poma.comment('v','poma.vcview2', 'test view2'
 , 'ok', 'new filed'
 ); -- EOT
 
-SELECT nspname, relname, attname, format_type(atttypid, atttypmod), obj_description(c.oid), col_description(c.oid, a.attnum) 
-FROM pg_class c 
-JOIN pg_attribute a ON (a.attrelid = c.oid) 
-JOIN pg_namespace n ON (n.oid = c.relnamespace)
-WHERE nspname='poma' AND relname = 'vcview2'
-ORDER BY attname ASC; --EOT
+SELECT nspname, relname, attname, format_type(atttypid, atttypmod), obj_description(c.oid), col_description(c.oid, a.attnum)
+  FROM pg_class c
+  JOIN pg_attribute a ON (a.attrelid = c.oid)
+  JOIN pg_namespace n ON (n.oid = c.relnamespace)
+ WHERE nspname='poma' AND relname = 'vcview2'
+ ORDER BY attname ASC; --EOT
 -- ----------------------------------------------------------------------------
 
 -- ----------------------------------------------------------------------------
@@ -111,9 +111,9 @@ SELECT poma.test('comment_column'); -- BOT
   Тест comment column
 */
 SELECT poma.comment('c', 'poma.pkg.id', 'Тест. Изменение наименования column id'); --EOT
-SELECT nspname, relname, attname, format_type(atttypid, atttypmod), obj_description(c.oid), col_description(c.oid, a.attnum) 
-FROM pg_class c 
-JOIN pg_attribute a ON (a.attrelid = c.oid) 
+SELECT nspname, relname, attname, format_type(atttypid, atttypmod), obj_description(c.oid), col_description(c.oid, a.attnum)
+FROM pg_class c
+JOIN pg_attribute a ON (a.attrelid = c.oid)
 JOIN pg_namespace n ON (n.oid = c.relnamespace)
 WHERE nspname='poma' AND relname='pkg' AND attname='id'
 ORDER BY attname ASC; --EOT
@@ -151,8 +151,10 @@ SELECT poma.comment('T', 'poma.tmp_errordef', 'Тестовый тип'
  , 'err_data', 'Данные ошибки'
 ); --EOT
 
-SELECT nspname, relname, attname, format_type(atttypid, atttypmod), obj_description(to_regtype(c.relname)), col_description(c.oid, a.attnum) 
-FROM pg_class c 
+SELECT nspname, relname, attname, format_type(atttypid, atttypmod)
+  , obj_description(to_regtype(nspname||'.'||c.relname))
+  , col_description(c.oid, a.attnum) 
+FROM pg_class c
 JOIN pg_attribute a ON (a.attrelid = c.oid) 
 JOIN pg_namespace n ON (n.oid = c.relnamespace)
 WHERE nspname='poma' AND relname='tmp_errordef'
@@ -201,6 +203,6 @@ SELECT poma.test('comment_sequence'); -- BOT
 /*
   Тест comment sequence
 */
-SELECT poma.comment('s', 'pkg_id_seq', 'Тест комментария последовательности pkg_id_seq'); --EOT
-SELECT obj_description('pkg_id_seq'::regclass); --EOT
+SELECT poma.comment('s', 'poma.pkg_id_seq', 'Тест комментария последовательности pkg_id_seq'); --EOT
+SELECT obj_description('poma.pkg_id_seq'::regclass); --EOT
 -- ----------------------------------------------------------------------------

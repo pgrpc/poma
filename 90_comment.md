@@ -61,7 +61,7 @@ ORDER BY attname ASC
 |poma    | pkg     | id         | integer                     | Информация о пакетах и схемах | идентификатор
 |poma    | pkg     | ip         | inet                        | Информация о пакетах и схемах | ip-адрес
 |poma    | pkg     | log_name   | text                        | Информация о пакетах и схемах | наименования пользователя
-|poma    | pkg     | op         | t_pkg_op                    | Информация о пакетах и схемах | стадия
+|poma    | pkg     | op         | poma.t_pkg_op               | Информация о пакетах и схемах | стадия
 |poma    | pkg     | schemas    | name[]                      | Информация о пакетах и схемах | наименование схемы
 |poma    | pkg     | ssh_client | text                        | Информация о пакетах и схемах | ключ
 |poma    | pkg     | stamp      | timestamp without time zone | Информация о пакетах и схемах | дата/время создания/изменения
@@ -276,8 +276,10 @@ SELECT poma.comment('T', 'poma.tmp_errordef', 'Тестовый тип'
 |
 
 ```sql
-SELECT nspname, relname, attname, format_type(atttypid, atttypmod), obj_description(to_regtype(c.relname)), col_description(c.oid, a.attnum) 
-FROM pg_class c 
+SELECT nspname, relname, attname, format_type(atttypid, atttypmod)
+  , obj_description(to_regtype(nspname||'.'||c.relname))
+  , col_description(c.oid, a.attnum) 
+FROM pg_class c
 JOIN pg_attribute a ON (a.attrelid = c.oid) 
 JOIN pg_namespace n ON (n.oid = c.relnamespace)
 WHERE nspname='poma' AND relname='tmp_errordef'
@@ -358,7 +360,7 @@ ORDER BY proname, pg_get_function_identity_arguments ASC
 /*
   Тест comment sequence
 */
-SELECT poma.comment('s', 'pkg_id_seq', 'Тест комментария последовательности pkg_id_seq')
+SELECT poma.comment('s', 'poma.pkg_id_seq', 'Тест комментария последовательности pkg_id_seq')
 ;
 ```
 |comment 
@@ -366,7 +368,7 @@ SELECT poma.comment('s', 'pkg_id_seq', 'Тест комментария посл
 |
 
 ```sql
-SELECT obj_description('pkg_id_seq'::regclass)
+SELECT obj_description('poma.pkg_id_seq'::regclass)
 ;
 ```
 |               obj_description                 
