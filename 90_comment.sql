@@ -3,6 +3,8 @@
 */
 
 -- ----------------------------------------------------------------------------
+SET SEARCH_PATH = 'public';
+
 SELECT poma.test('comment_schema'); -- BOT
 /*
   Test comment schema

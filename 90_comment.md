@@ -180,12 +180,12 @@ SELECT poma.comment('v','poma.vcview2', 'test view2'
 |
 
 ```sql
-SELECT nspname, relname, attname, format_type(atttypid, atttypmod), obj_description(c.oid), col_description(c.oid, a.attnum) 
-FROM pg_class c 
-JOIN pg_attribute a ON (a.attrelid = c.oid) 
-JOIN pg_namespace n ON (n.oid = c.relnamespace)
-WHERE nspname='poma' AND relname = 'vcview2'
-ORDER BY attname ASC
+SELECT nspname, relname, attname, format_type(atttypid, atttypmod), obj_description(c.oid), col_description(c.oid, a.attnum)
+  FROM pg_class c
+  JOIN pg_attribute a ON (a.attrelid = c.oid)
+  JOIN pg_namespace n ON (n.oid = c.relnamespace)
+ WHERE nspname='poma' AND relname = 'vcview2'
+ ORDER BY attname ASC
 ;
 ```
 |nspname | relname | attname | format_type | obj_description | col_description 
@@ -209,9 +209,9 @@ SELECT poma.comment('c', 'poma.pkg.id', 'Тест. Изменение наиме
 |
 
 ```sql
-SELECT nspname, relname, attname, format_type(atttypid, atttypmod), obj_description(c.oid), col_description(c.oid, a.attnum) 
-FROM pg_class c 
-JOIN pg_attribute a ON (a.attrelid = c.oid) 
+SELECT nspname, relname, attname, format_type(atttypid, atttypmod), obj_description(c.oid), col_description(c.oid, a.attnum)
+FROM pg_class c
+JOIN pg_attribute a ON (a.attrelid = c.oid)
 JOIN pg_namespace n ON (n.oid = c.relnamespace)
 WHERE nspname='poma' AND relname='pkg' AND attname='id'
 ORDER BY attname ASC
