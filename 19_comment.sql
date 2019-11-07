@@ -90,20 +90,22 @@ $_$
     IF v_object = 'VIEW' THEN
       -- fill view column comments from deps
       SELECT INTO v_comments
-        jsonb_object_agg(a.attname, comment)
-        FROM  pg_depend d
-          JOIN pg_catalog.pg_attribute a ON (a.attrelid = d.refobjid AND a.attnum = d.refobjsubid)
-        , LATERAL pg_identify_object(classid, objid, 0) AS obj
-        , LATERAL pg_identify_object(refclassid, refobjid, 0) AS refobj
-        , LATERAL right(obj.identity, -13) as code
-        , LATERAL col_description(refobjid,refobjsubid) AS comment
-        WHERE classid <> 0
-          AND refobjsubid <> 0
-          AND obj.type = 'rule'
-          AND obj.identity LIKE '"_RETURN" on %'
-          AND comment IS NOT NULL
-          AND code = array_to_string(v_names,'.')
-      ;
+          jsonb_object_agg(attname,comment)
+        FROM ( SELECT a.attname, comment
+          FROM  pg_depend d
+            JOIN pg_catalog.pg_attribute a ON (a.attrelid = d.refobjid AND a.attnum = d.refobjsubid)
+          , LATERAL pg_identify_object(classid, objid, 0) AS obj
+          , LATERAL pg_identify_object(refclassid, refobjid, 0) AS refobj
+          , LATERAL right(obj.identity, -13) as code
+          , LATERAL col_description(refobjid,refobjsubid) AS comment
+          WHERE classid <> 0
+            AND refobjsubid <> 0
+            AND obj.type = 'rule'
+            AND obj.identity LIKE '"_RETURN" on %'
+            AND comment IS NOT NULL
+            AND code = array_to_string(v_names,'.')
+          ORDER BY refobj.identity -- use last comment in schema.name order
+        ) tmpq;
     END IF;
 
     IF a_columns IS NOT NULL THEN
